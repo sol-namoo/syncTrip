@@ -7,7 +7,7 @@ const preview: Preview = {
     backgrounds: {
       default: "canvas",
       values: [
-        { name: "canvas", value: "#f5f4ef" },
+        { name: "canvas", value: "#f5f7fb" },
         { name: "ink", value: "#1d1e20" },
       ],
     },
@@ -20,7 +20,7 @@ const preview: Preview = {
   },
   decorators: [
     (Story) => (
-      <div className="min-h-screen w-full bg-[linear-gradient(180deg,#f8f6f0_0%,#f1ecdf_100%)] p-8 text-[#1d1e20]">
+      <div className="min-h-screen w-full bg-background p-8 text-foreground">
         <Story />
       </div>
     ),
