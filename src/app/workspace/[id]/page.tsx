@@ -1,9 +1,16 @@
+import { ProfileMenu } from "@/features/auth/components/profile-menu";
+import { createClient } from "@/lib/supabase/server";
+
 export default async function WorkspacePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return (
     <main className="flex min-h-screen flex-col">
@@ -22,6 +29,13 @@ export default async function WorkspacePage({
             <div className="hidden rounded-xl border px-4 py-2 text-sm font-medium text-muted-foreground md:block">
               액션 영역
             </div>
+            {user ? (
+              <ProfileMenu
+                email={user.email}
+                fullName={user.user_metadata?.full_name ?? user.user_metadata?.name}
+                avatarUrl={user.user_metadata?.avatar_url}
+              />
+            ) : null}
           </div>
         </div>
       </header>
