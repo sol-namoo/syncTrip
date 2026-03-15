@@ -5,5 +5,5 @@ export default function WorkspaceLayout({
 }: {
   children: ReactNode;
 }) {
-  return <>{children}</>;
+  return <div className="min-h-screen bg-background">{children}</div>;
 }
