@@ -195,13 +195,18 @@
 - 목적
   - 이후 feature 구현에서 반복될 버튼/모달/배지/아바타 스타일을 고정한다.
 - 작업 내용
-  - `src/components/ui`에 button, input, modal, badge, avatar-stack, toast, banner 추가
+  - `src/components/ui`에 button, input, dialog, badge, avatar-stack, toast, alert 추가
+  - `avatar-stack`은 presence dot 없이 사용자 고유 색상 ring과 상태별 아바타 스타일로 구성한다.
+    - `online`: 기본 색상 ring
+    - `away`: opacity 감소
+    - `offline`: grayscale + opacity 감소
+    - `editing`: ring 두께 증가
   - Tailwind 토큰 클래스와 상태 variant를 정리
 - 관련 파일/폴더
   - `src/components/ui`
   - `src/app/globals.css`
 - 필요한 상태/타입
-  - `ButtonVariant`, `BannerTone`, `ToastState`
+  - `ButtonVariant`, `AlertTone`, `ToastState`, `AvatarStackUser`
 - Supabase 연동 필요 여부
   - 아니오
 - 선행조건
@@ -361,7 +366,7 @@
   - `src/store/workspace-ui-store.ts`
   - `src/store/workspace-presence-store.ts`
 - 필요한 상태/타입
-  - `BoardColumnEntity`, `BoardCardEntity`, `SaveIndicatorState`, `RemoteCursor`, `EditingPresenceMap`
+  - `BoardColumnEntity`, `BoardCardEntity`, `SaveIndicatorState`, `RemoteCursor`, `EditingPresenceMap`, `PresenceUser`
 - Supabase 연동 필요 여부
   - 아니오
 - 선행조건
@@ -579,6 +584,12 @@
 - 작업 내용
   - Supabase presence join/leave
   - 헤더 avatar stack, tooltip, 현재 보고 있는 day 정도의 메타데이터 반영
+  - 사용자별 고유 color를 cursor, avatar ring, card editing pill과 동일하게 사용한다.
+  - presence dot은 사용하지 않고 아바타 상태로 표현한다.
+    - `online`: 기본 색상 ring
+    - `away`: opacity 감소
+    - `offline`: grayscale + opacity 감소
+    - `editing`: ring 두께 증가
 - 관련 파일/폴더
   - `src/features/workspace/hooks/use-workspace-presence.ts`
   - `src/features/workspace/components/workspace-header.tsx`
@@ -626,7 +637,8 @@
 - 작업 내용
   - 카드 focus 시 editing presence broadcast
   - focus 해제 또는 heartbeat timeout 시 해제
-  - 카드 테두리 색, 이름 pill, 상단 배너 반영
+  - 카드 테두리 색, 이름 pill, 상단 alert 반영
+  - 카드 편집 pill 색상은 해당 사용자의 cursor/avatar 색상과 동일하게 유지한다.
 - 관련 파일/폴더
   - `src/features/workspace/hooks/use-card-edit-presence.ts`
   - `src/features/workspace/components/place-card.tsx`
@@ -792,6 +804,7 @@
   - remote cursor 좌표
   - 카드별 편집 중 사용자
   - 일시적인 remote drag 상태
+  - 각 접속자별 `color`, `status` 메타데이터
 - `trips-store`
   - 대시보드 필터 탭
   - create modal open state
@@ -869,13 +882,14 @@ type PassportStampItem = {
 
 #### 1. Presence
 - 용도
-  - 접속자 목록, 현재 보고 있는 day 등의 세션 메타데이터
+  - 접속자 목록, 현재 보고 있는 day, 아바타 상태 스타일에 필요한 세션 메타데이터
 - 전송 방식
   - Supabase `presence`
 - 저장 위치
   - DB 저장 없음
 - 갱신 트리거
   - join, leave, day filter 변경
+  - 상태 payload는 `userId`, `displayName`, `color`, `status`를 포함한다.
 
 #### 2. Cursor Sync
 - 용도

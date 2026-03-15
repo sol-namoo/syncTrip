@@ -1,0 +1,20 @@
+[15:44:00.482] [INFO] storybook v10.2.19
+[15:44:01.576] [DEBUG] Getting package.json info for /Users/namooair/Documents/Workspace/SyncTrip/package.json...
+[15:44:01.964] [INFO] Starting...
+[15:44:02.056] [DEBUG] Starting preview..
+[15:44:02.147] [DEBUG] Using tsconfig paths for react-docgen
+[15:44:02.280] [ERROR] Failed to build the preview
+[15:44:02.282] [ERROR] [38;2;241;97;97mReferenceError: __dirname is not defined[39m
+    at Object.viteFinal (file://./.storybook/main.ts:17:29)
+    at file://./node_modules/storybook/dist/_node-chunks/chunk-2RKLK4B2.js:10114:36
+    at async createViteServer (file://./node_modules/@storybook/builder-vite/dist/index.js:1909:21)
+    at async Module.start (file://./node_modules/@storybook/builder-vite/dist/index.js:1934:17)
+    at async storybookDevServer (file://./node_modules/storybook/dist/core-server/index.js:7295:83)
+    at async buildOrThrow (file://./node_modules/storybook/dist/core-server/index.js:4506:12)
+    at async buildDevStandalone (file://./node_modules/storybook/dist/core-server/index.js:7710:41)
+    at async withTelemetry (file://./node_modules/storybook/dist/_node-chunks/chunk-FJZ625UU.js:218:12)
+    at async dev (file://./node_modules/storybook/dist/bin/core.js:2734:3)
+    at async _Command.<anonymous> (file://./node_modules/storybook/dist/bin/core.js:2804:92)
+[15:44:02.284] [WARN] Broken build, fix the error above.
+You may need to refresh the browser.
+[15:44:48.842] [PROMPT] Would you like to send anonymous crash reports to improve Storybook and fix bugs faster? {"choice":true}

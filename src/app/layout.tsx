@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import "./globals.css";
 
@@ -25,7 +26,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className={cn("font-sans", geistSans.variable, geistMono.variable)}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {children}
+        <Toaster richColors position="top-right" />
+      </body>
     </html>
   );
 }
