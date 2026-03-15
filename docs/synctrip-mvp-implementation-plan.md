@@ -147,15 +147,16 @@
 - 목적
   - MVP 라우트 흐름과 페이지별 서버/클라이언트 경계를 고정한다.
 - 작업 내용
-  - `src/app/page.tsx`, `src/app/(auth)/login/page.tsx`, `src/app/trips/page.tsx`, `src/app/workspace/[id]/page.tsx`, `src/app/share/[id]/page.tsx`를 목적에 맞는 서버 페이지 셸로 구성한다.
+  - `src/app/page.tsx`, `src/app/(auth)/login/page.tsx`, `src/app/trips/page.tsx`, `src/app/workspace/[id]/page.tsx`, `src/app/share/[id]/page.tsx`를 목적에 맞는 페이지 셸로 구성한다.
+  - `(main)` 레이아웃과 `workspace/[id]` 레이아웃을 분리해 중앙 정렬 화면과 전체 폭 화면의 레이아웃 경계를 고정한다.
   - `src/app/workspace/[id]/layout.tsx`는 Workspace용 헤더/높이 제약을 걸 수 있는 전용 layout으로 정리한다.
   - 공통 메타데이터와 body class를 `src/app/layout.tsx`에 설정한다.
 - 관련 파일/폴더
   - `src/app`
 - 필요한 상태/타입
-  - `AppRouteIntent`, `AuthRedirectTarget`
+  - 없음
 - Supabase 연동 필요 여부
-  - 예
+  - 아니오
 - 선행조건
   - 없음
 - 난이도
@@ -163,7 +164,7 @@
 - 리스크
   - 낮음. 페이지 셸만 만들면 된다.
 - 완료 조건
-  - 모든 핵심 라우트가 목적에 맞는 빈 상태/초기 데이터 fetch 자리까지 준비된다.
+  - 모든 핵심 라우트가 목적에 맞는 레이아웃 셸과 페이지 진입 구조를 가진다.
 
 #### Task 1-2. 소셜 로그인 UI와 세션 흐름 구현
 - 목적
@@ -178,7 +179,7 @@
   - `src/app/(auth)/login/page.tsx`
   - `src/lib/supabase/client.ts`
 - 필요한 상태/타입
-  - `AuthProvider`, `AuthModalState`
+  - `AuthProvider`, `AuthModalState`, `AppRouteIntent`, `AuthRedirectTarget`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
