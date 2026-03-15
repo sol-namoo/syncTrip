@@ -1,14 +1,31 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { ProfileMenu } from "@/features/auth/components/profile-menu";
+import { createClient } from "@/lib/supabase/server";
 
-export default function MainLayout({ children }: { children: ReactNode }) {
+export default async function MainLayout({ children }: { children: ReactNode }) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login?next=/trips");
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/80 bg-white">
         <div className="mx-auto flex h-[68px] max-w-6xl items-center justify-between px-6 lg:px-10">
-          <div className="text-2xl font-semibold tracking-tight">SyncTrip</div>
-          <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-            김
-          </div>
+          <Link href="/trips" className="text-2xl font-semibold tracking-tight">
+            SyncTrip
+          </Link>
+          <ProfileMenu
+            email={user.email}
+            fullName={user.user_metadata?.full_name ?? user.user_metadata?.name}
+            avatarUrl={user.user_metadata?.avatar_url}
+          />
         </div>
       </header>
 
