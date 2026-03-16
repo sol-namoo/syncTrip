@@ -5,6 +5,7 @@ export function useTripsQuery() {
   return useQuery({
     queryKey: ["trips"],
     queryFn: getMyTrips,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
   });
 }
