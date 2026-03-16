@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SyncTrip
 
-## Getting Started
+> This project is currently in MVP development. It is not a finished product yet, and the current focus is on the core user flow and realtime collaboration features.
 
-First, run the development server:
+SyncTrip is a collaborative travel planning product where multiple users can build and edit a trip together. The goal is to let users search places, organize them by day in a kanban board, and shape a shared itinerary alongside a map view.
+
+The current MVP is focused on the following:
+
+- Social login and trip space creation
+- Place search and drag-and-drop itinerary planning
+- Multi-cursor and realtime card movement sync with Supabase Realtime
+- 3D passport-style itinerary rendering with image download
+
+## Current Direction
+
+- Desktop-first workspace with a split map and kanban board layout
+- Mobile-first share/export flow for viewing and sharing the 3D passport result
+- Supabase-based auth, persistence, and realtime collaboration
+
+## Documentation
+
+- Implementation plan: [`docs/synctrip-mvp-implementation-plan.md`](./docs/synctrip-mvp-implementation-plan.md)
+
+## Environment Variables
+
+To run the project locally, set these environment variables:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your_supabase_publishable_key
+```
+
+## Database
+
+This project also requires a Supabase-backed Postgres database. The MVP currently assumes at least these core tables:
+
+- `trips`
+- `trip_members`
+- `trip_cards`
+
+## Run Locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
