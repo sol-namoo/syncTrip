@@ -225,14 +225,15 @@
   - My Trips 화면에서 필요한 최소 데이터를 고정한다.
 - 작업 내용
   - `trip_members`, `trips` 기준으로 대시보드 목록 query shape 설계
-  - `TripSummary`, `TripMemberSummary` 타입 정의
-  - 서버 페이지에서 초기 목록 fetch
+  - `TripListItem`, `TripMembershipResult` 타입 정의
+  - React Query hook으로 목록 fetch
 - 관련 파일/폴더
-  - `src/types/trip.ts`
+  - `src/features/trips/types.ts`
   - `src/features/trips/lib/queries.ts`
-  - `src/app/trips/page.tsx`
+  - `src/features/trips/hooks/useTripsQuery.ts`
+  - `src/app/(main)/trips/page.tsx`
 - 필요한 상태/타입
-  - `TripSummary[]`
+  - `TripListItem[]`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
@@ -240,9 +241,9 @@
 - 난이도
   - 중
 - 리스크
-  - 현재 DB 타입에 `trip_members`가 없으므로 스키마 확장 전에는 mock이 필요하다.
+  - `trip_members`를 포함한 join 결과 타입이 DB row 타입과 다르므로 query result type을 별도로 관리해야 한다.
 - 완료 조건
-  - 서버에서 대시보드 초기 목록을 받아 렌더할 수 있다.
+  - 로그인 사용자가 React Query를 통해 자신의 여행 목록을 받아 렌더할 수 있다.
 
 #### Task 2-2. My Trips 화면 구현
 - 목적
