@@ -5,7 +5,8 @@
 ### 디자이너 산출물에서 구현상 중요한 결정
 - MVP의 주 경로는 `로그인 -> 여행 생성 -> Workspace 편집 -> 3D 여권 발급/공유`로 고정한다.
 - Workspace는 데스크톱 우선이며, `지도 + 칸반 보드`를 동시에 보여주는 2-pane 구조를 유지한다.
-- 장소 검색 결과를 별도 페이지로 보내지 않고, Workspace 우측 `장소 바구니` 컬럼 내부에서 처리한다.
+- 장소 검색 결과를 별도 페이지로 보내지 않고, Workspace 내부에서 처리한다.
+- 검색 결과는 `장소 바구니`에 넣을 수도 있고 특정 `Day`에 바로 넣을 수도 있다.
 - 여행 기간 기준으로 `Day 1..N` 컬럼을 자동 생성한다. MVP에서는 컬럼 추가/삭제 커스터마이징을 후순위로 둔다.
 - 실시간 협업은 별도 패널이 아니라 `헤더의 접속자`, `카드 편집 상태`, `멀티 커서`, `카드 이동 동기화`로 분산 노출한다.
 - 카드 자체가 일정의 최소 저장 단위다. 장소 메타데이터, 일자 배치, 정렬 순서, 메모를 모두 카드 row에 둔다.
@@ -22,12 +23,12 @@
 - 아직 `components/ui`, `store`, `types`의 실제 구현이 거의 없으므로 과도한 리팩터링 없이 초기 구조를 바로 확정할 수 있다.
 
 ### 확정 필요
-- 장소 검색 데이터 소스
-  - Google Places, Mapbox Geocoding, Foursquare 등 외부 provider가 필요하다.
-  - 미확정 상태에서는 `PlaceSearchAdapter` 인터페이스로 분리하고, provider 확정 전까지 mock 구현을 둘 수 있다.
-- 지도 렌더링 provider
-  - 현재 스택 목록에 지도 SDK가 없다.
-  - 지도 provider를 확정해야 `MapOverview` 실제 구현 범위를 고정할 수 있다.
+- 지도 렌더링 라이브러리
+  - 방향은 `Google Maps JavaScript API + React wrapper`로 고정한다.
+  - 다만 실제로 어떤 React 라이브러리를 쓸지는 확정이 필요하다.
+- Google Places 연동 세부 범위
+  - 검색창은 Google Places Autocomplete 기반으로 직접 구현한다.
+  - Place Details / Photo API를 어느 수준까지 함께 쓸지 확정이 필요하다.
 - 공유 권한 모델
   - `/share/[id]`를 완전 공개로 둘지, 로그인 필요 링크로 둘지 결정이 필요하다.
 - 초대 방식
@@ -113,6 +114,10 @@
   - 이후 상태 관리는 Zustand와 Supabase Realtime channel, `postgres_changes` 직접 연결로만 해결한다.
   - 잦은 낙관적 업데이트와 웹소켓 실시간 동기화가 Query 캐시와 충돌하지 않도록 캐시 계층을 두지 않는다.
 - 낙관적 UI는 Workspace에서 Zustand store로 처리하고, 성공/실패는 mutation 결과와 Realtime 반영으로 수습한다.
+- 지도와 검색창은 모두 앱이 직접 렌더링한다.
+  - 지도: Google Maps의 지도 canvas만 빌려온다.
+  - 검색창: Google Places Autocomplete를 연결한 React input + dropdown을 직접 구현한다.
+  - 즉 Google Maps 웹사이트 자체를 띄워 두고 그 안의 검색 UI를 재사용하는 방식은 사용하지 않는다.
 
 ### 반응형 우선순위
 - `Workspace`: 데스크톱 우선, 모바일은 읽기 전용/축소 상호작용
@@ -258,7 +263,7 @@
   - `src/features/trips/components/trip-card.tsx`
   - `src/app/(main)/trips/page.tsx`
 - 필요한 상태/타입
-  - `TripCardViewModel`
+  - `TripItemViewModel`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
@@ -302,8 +307,8 @@
 - 목적
   - 칸반과 지도, 3D 결과가 같은 데이터를 바라보게 만든다.
 - 작업 내용
-  - `trip_cards`, `trip_members` 기준 DB 타입 확장
-  - UI용 `BoardColumn`, `PlaceCard`, `WorkspaceSnapshot` 타입 정의
+  - `trip_items`, `trip_members` 기준 DB 타입 확장
+  - UI용 `BoardColumn`, `TripPlaceCard`, `WorkspaceSnapshot` 타입 정의
   - 카드 row에 필요한 필드 고정
     - `id`, `trip_id`, `place_id`, `name`, `address`, `lat`, `lng`, `image_url`, `note`, `list_type`, `day_index`, `order_index`, `created_by`, `updated_at`
 - 관련 파일/폴더
@@ -311,7 +316,7 @@
   - `src/types/workspace.ts`
   - `src/types/trip.ts`
 - 필요한 상태/타입
-  - `TripCardRow`, `BoardColumnId`, `WorkspaceSnapshot`
+  - `TripItemRow`, `BoardColumnId`, `WorkspaceSnapshot`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
@@ -335,7 +340,7 @@
   - `src/features/workspace/components/workspace-screen.tsx`
   - `src/features/workspace/lib/queries.ts`
 - 필요한 상태/타입
-  - `WorkspacePageProps`, `WorkspaceSnapshot`
+  - `WorkspaceSnapshot`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
@@ -487,10 +492,10 @@
 
 #### Task 4-1. 장소 검색 adapter 계층 구현
 - 목적
-  - provider 미확정 상태에서도 UI 개발을 진행할 수 있게 검색 계층을 분리한다.
+  - Google Places 기반 검색 계층을 UI와 분리하고, 필요하면 mock으로 대체 가능하게 만든다.
 - 작업 내용
   - `PlaceSearchAdapter` 인터페이스 정의
-  - provider별 응답을 공통 `PlaceSearchResult`로 normalize
+  - Google Places Autocomplete / Place Details 응답을 공통 `PlaceSearchResult`로 normalize
   - mock adapter와 실제 adapter 교체 가능 구조 작성
 - 관련 파일/폴더
   - `src/features/map/lib/place-search-adapter.ts`
@@ -500,26 +505,29 @@
 - Supabase 연동 필요 여부
   - 아니오
 - 선행조건
-  - 장소 검색 provider 확정 또는 mock 사용 결정
+  - Google Places 사용 결정
 - 난이도
   - 중
 - 리스크
-  - provider마다 이미지, 주소, 좌표 필드가 달라 normalize 비용이 있다.
+  - Google Places Photo 정책과 응답 shape를 잘못 이해하면 `image_url` 전략이 흔들릴 수 있다.
 - 완료 조건
   - UI는 provider와 무관하게 같은 타입으로 검색 결과를 받을 수 있다.
 
 #### Task 4-2. Workspace 검색창과 결과 드롭다운 구현
 - 목적
-  - 사용자가 장소를 검색하고 바구니에 추가하는 경로를 완성한다.
+  - 사용자가 장소를 검색하고 `장소 바구니` 또는 특정 `Day`에 추가하는 경로를 완성한다.
 - 작업 내용
-  - 검색 input, debounce, 결과 dropdown, 로딩/빈 상태
-  - 검색 결과를 `trip_cards`의 basket 카드로 insert
+  - React 기반 검색 input, debounce, 결과 dropdown, 로딩/빈 상태 구현
+  - 검색창은 앱이 직접 렌더링하고 Google Places Autocomplete와 연결
+  - 검색 결과를 `trip_items`의 bucket 항목으로 insert
+  - 검색 결과를 특정 `Day`의 `trip_items`로 바로 insert하는 경로 추가
+  - `장소 바구니에 추가` / `Day에 바로 추가` 선택 UI 정의
 - 관련 파일/폴더
   - `src/features/workspace/components/place-search-bar.tsx`
   - `src/features/workspace/components/place-search-results.tsx`
   - `src/features/workspace/lib/mutations.ts`
 - 필요한 상태/타입
-  - `PlaceSearchQueryState`, `CreateTripCardInput`
+  - `PlaceSearchQueryState`, `CreateTripItemInput`, `SearchInsertTarget`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
@@ -528,13 +536,15 @@
   - 중
 - 리스크
   - 검색 API rate limit과 debounce 설정이 맞지 않으면 UX가 흔들린다.
+  - Day 직접 추가 UI가 과하면 검색 경험이 느려질 수 있다.
 - 완료 조건
-  - 검색 결과를 클릭하면 카드가 바구니 컬럼에 추가된다.
+  - 검색 결과를 선택하면 bucket 또는 특정 Day 컬럼에 카드가 생성된다.
 
 #### Task 4-3. 지도 뷰와 카드 연동 구현
 - 목적
   - 보드 편집 결과를 공간적으로 바로 확인하게 한다.
 - 작업 내용
+  - Google Maps canvas를 React 컴포넌트로 렌더링
   - 지도 provider 연결
   - 카드 목록 기반 마커 렌더링
   - Day 색상별 경로(Polyline) 표시
@@ -555,6 +565,7 @@
   - 상
 - 리스크
   - 이동 경로를 실제 길찾기로 만들면 범위가 급격히 커진다. MVP에서는 straight polyline으로 제한해야 한다.
+  - Google Maps 웹사이트 자체를 띄우는 방식이 아니므로, 검색 UI와 marker 상호작용을 앱에서 직접 설계해야 한다.
 - 완료 조건
   - Day별 마커와 연결선이 보드 상태에 맞게 갱신된다.
 
@@ -566,7 +577,7 @@
 - 작업 내용
   - trip 단위 채널 네이밍 규칙 정의: `trip:{tripId}`
   - presence, cursor, editing-lock, transient drag 상태 payload 타입 정의
-  - `postgres_changes` 대상 테이블 정의: `trip_cards`, `trip_members`
+  - `postgres_changes` 대상 테이블 정의: `trip_items`, `trip_members`
 - 관련 파일/폴더
   - `src/types/realtime.ts`
   - `src/features/workspace/lib/realtime-channel.ts`
@@ -628,7 +639,7 @@
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
-  - Task 5-1
+  - Task 5-1, Task 4-3
 - 난이도
   - 중
 - 리스크
@@ -665,7 +676,7 @@
 - 목적
   - 다른 사용자의 변경이 내 화면에도 즉시 반영되게 한다.
 - 작업 내용
-  - `trip_cards` `postgres_changes` 구독
+  - `trip_items` `postgres_changes` 구독
   - row insert/update/delete를 현재 보드 store에 반영
   - 로컬 optimistic 상태와 충돌 시 server row 기준 정렬 재계산
 - 관련 파일/폴더
@@ -673,7 +684,7 @@
   - `src/features/workspace/lib/reconcile-trip-cards.ts`
   - `src/store/workspace-ui-store.ts`
 - 필요한 상태/타입
-  - `TripCardRow`, `RealtimeCardMutation`
+  - `TripItemRow`, `RealtimeItemMutation`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
@@ -788,7 +799,7 @@
   - `id`, `name`, `start_date`, `end_date`, `created_at`
 - `trip_members`
   - `trip_id`, `user_id`, `role`, `joined_at`
-- `trip_cards`
+- `trip_items`
   - `id`, `trip_id`
   - 장소 메타데이터: `place_id`, `name`, `address`, `lat`, `lng`, `image_url`
   - 보드 상태: `list_type`, `day_index`, `order_index`
@@ -873,7 +884,7 @@ type PassportStampItem = {
 ```
 
 ### 왜 이렇게 나누는가
-- 보드의 진짜 소스 오브 트루스는 `trip_cards`다. 그래야 새로고침, 공유, 3D export가 모두 같은 데이터를 읽는다.
+- 보드의 진짜 소스 오브 트루스는 `trip_items`다. 그래야 새로고침, 공유, 3D export가 모두 같은 데이터를 읽는다.
 - presence/cursor/editing은 영속할 필요가 없으므로 DB에 저장하지 않는다. Supabase channel presence/broadcast로 끝내는 편이 맞다.
 - UI 상태를 DB에 섞지 않으면 optimistic update 롤백이 단순해진다.
 
@@ -922,7 +933,7 @@ type PassportStampItem = {
 - 전송 방식
   - Supabase table write + `postgres_changes`
 - 저장 위치
-  - `trip_cards`
+  - `trip_items`
 - 갱신 트리거
   - mutation 발생 시
 
@@ -954,8 +965,8 @@ type PassportStampItem = {
 ## 섹션 7: Risks and Tradeoffs
 
 ### 주요 리스크
-- 장소 검색 provider와 지도 provider가 미확정이다.
-  - 이 둘이 늦어지면 Workspace의 절반이 막힌다.
+- Google Places + Google Maps 방향은 정해졌지만, 실제 React 지도 라이브러리 선택은 남아 있다.
+  - 이 결정이 늦어지면 Workspace의 절반이 막힌다.
 - DnD와 Realtime을 동시에 붙이면 reorder 충돌 디버깅 비용이 크다.
 - 3D export는 시각적 임팩트를 올릴수록 모바일 성능이 급격히 떨어진다.
 - Supabase DB 타입이 실제 스키마와 맞지 않으면 타입 안정성이 깨진다.
@@ -963,7 +974,7 @@ type PassportStampItem = {
 ### 현실적인 대안
 - 지도 경로는 실제 길찾기 API 대신 straight polyline으로 제한한다.
 - 카드 lock은 진짜 동시 편집 방지 락이 아니라 `시각적 편집 표시`로 제한한다.
-- 장소 검색 provider 확정 전까지는 mock adapter로 UI를 먼저 진행한다.
+- Google Places 세부 연동 전까지는 mock adapter로 UI를 먼저 진행한다.
 - 3D 여권 모델은 복잡한 glTF 대신 `Three primitives + 텍스트/스탬프 plane`으로 시작한다.
 - 다운로드는 첫 단계에서 PNG만 지원한다.
 
@@ -986,19 +997,21 @@ type PassportStampItem = {
 2. Auth + 라우트 셸 + 공통 UI 프리미티브 구축
 3. Trips 목록/생성 플로우 구현
 4. Workspace 초기 fetch + 보드 렌더
-5. 카드 DnD, 메모 저장, 저장 상태 구현
-6. 장소 검색 adapter + 검색 결과를 바구니 카드로 저장
-7. 지도 마커/경로 연동
+5. 장소 검색 adapter + 검색 결과를 bucket 또는 Day 카드로 저장
+6. 지도 마커/경로 연동
+7. 카드 DnD, 메모 저장, 저장 상태 구현
 8. Realtime presence
-9. Realtime cursor + editing presence
-10. `trip_cards` 구독 기반 실시간 동기화
-11. Passport render data builder
-12. Export Modal + 3D viewer
-13. PNG 다운로드
-14. Share 화면
+9. 카드 편집 상태와 충돌 경고
+10. `trip_items` 구독 기반 실시간 동기화
+11. Realtime cursor
+12. Passport render data builder
+13. Export Modal + 3D viewer
+14. PNG 다운로드
+15. Share 화면
 
 ### 이 순서를 권장하는 이유
-- `trip_cards` 저장 모델이 먼저 고정돼야 보드, 지도, export가 같은 데이터를 볼 수 있다.
+- `trip_items` 저장 모델이 먼저 고정돼야 보드, 지도, export가 같은 데이터를 볼 수 있다.
+- 지도 좌표계를 함께 쓰는 커서 동기화는 실제 지도 surface가 붙은 뒤 진행하는 편이 안전하다.
 - Realtime은 기본 편집이 끝난 뒤 붙여야 디버깅 범위를 줄일 수 있다.
 - 3D viewer는 데이터 모델이 안정된 뒤 구현해야 재작업이 적다.
 - Share 화면은 Export 결과를 재사용하므로 가장 마지막에 붙이는 편이 효율적이다.
