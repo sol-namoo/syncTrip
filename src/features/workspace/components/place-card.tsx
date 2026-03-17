@@ -1,6 +1,7 @@
 "use client";
 
-import { GripVertical, MapPin, Trash2 } from "lucide-react";
+import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
+import { MapPin, MoreVertical, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
 import type { TripPlaceCard } from "@/types/workspace";
@@ -27,18 +28,27 @@ function CardImage({ imageUrl, name }: { imageUrl: string | null; name: string }
   );
 }
 
-export function PlaceCard({ card }: { card: TripPlaceCard }) {
+export function PlaceCard({
+  card,
+  dragHandleProps,
+  isDragging = false,
+}: {
+  card: TripPlaceCard;
+  dragHandleProps?: DraggableProvidedDragHandleProps | null;
+  isDragging?: boolean;
+}) {
   const selectedCardId = useWorkspaceUiStore((state) => state.selectedCardId);
   const setSelectedCardId = useWorkspaceUiStore((state) => state.setSelectedCardId);
 
   const isSelected = selectedCardId === card.id;
 
   return (
-    <button
-      type="button"
+    <div
+      {...dragHandleProps}
       onClick={() => setSelectedCardId(card.id)}
       className={cn(
-        "overflow-hidden rounded-lg border bg-white text-left transition-all hover:-translate-y-0.5 hover:shadow-md",
+        "cursor-grab overflow-hidden rounded-lg border bg-white text-left transition-all hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing",
+        isDragging && "rotate-[1deg] shadow-lg",
         isSelected
           ? "border-blue-500 ring-2 ring-blue-100 shadow-sm"
           : "border-gray-200"
@@ -46,9 +56,16 @@ export function PlaceCard({ card }: { card: TripPlaceCard }) {
     >
       <div className="relative">
         <CardImage imageUrl={card.imageUrl} name={card.name} />
-        <div className="absolute left-2 top-2 rounded-full bg-white p-1.5 shadow-sm">
-          <GripVertical className="size-4 text-gray-400" />
-        </div>
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+          }}
+          className="absolute right-2 top-2 rounded-full bg-white p-1.5 text-gray-400 shadow-sm transition-colors hover:text-gray-700"
+          aria-label={`${card.name} actions`}
+        >
+          <MoreVertical className="size-4" />
+        </button>
       </div>
 
       <div className="p-3">
@@ -68,6 +85,6 @@ export function PlaceCard({ card }: { card: TripPlaceCard }) {
           </span>
         </div>
       </div>
-    </button>
+    </div>
   );
 }

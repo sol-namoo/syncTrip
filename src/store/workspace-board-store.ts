@@ -17,6 +17,12 @@ type WorkspaceBoardState = {
   upsertCard: (card: TripPlaceCard) => void;
   removeCard: (cardId: string) => void;
   setColumnCardIds: (columnId: BoardColumnId, cardIds: string[]) => void;
+  moveCard: (input: {
+    sourceColumnId: BoardColumnId;
+    destinationColumnId: BoardColumnId;
+    sourceIndex: number;
+    destinationIndex: number;
+  }) => void;
 };
 
 function normalizeSnapshot(snapshot: WorkspaceSnapshot) {
@@ -94,5 +100,88 @@ export const useWorkspaceBoardStore = create<WorkspaceBoardState>((set) => ({
           : undefined,
       },
     }));
+  },
+  moveCard: ({ sourceColumnId, destinationColumnId, sourceIndex, destinationIndex }) => {
+    set((state) => {
+      const sourceColumn = state.columnsById[sourceColumnId];
+      const destinationColumn = state.columnsById[destinationColumnId];
+
+      if (!sourceColumn || !destinationColumn) {
+        return state;
+      }
+
+      const nextCardsById = { ...state.cardsById };
+      const sourceCardIds = [...sourceColumn.cardIds];
+      const [movedCardId] = sourceCardIds.splice(sourceIndex, 1);
+
+      if (!movedCardId) {
+        return state;
+      }
+
+      if (sourceColumnId === destinationColumnId) {
+        sourceCardIds.splice(destinationIndex, 0, movedCardId);
+
+        sourceCardIds.forEach((cardId, index) => {
+          const existingCard = nextCardsById[cardId];
+          if (existingCard) {
+            nextCardsById[cardId] = {
+              ...existingCard,
+              orderIndex: index,
+            };
+          }
+        });
+
+        return {
+          columnsById: {
+            ...state.columnsById,
+            [sourceColumnId]: {
+              ...sourceColumn,
+              cardIds: sourceCardIds,
+            },
+          },
+          cardsById: nextCardsById,
+        };
+      }
+
+      const destinationCardIds = [...destinationColumn.cardIds];
+      destinationCardIds.splice(destinationIndex, 0, movedCardId);
+
+      sourceCardIds.forEach((cardId, index) => {
+        const existingCard = nextCardsById[cardId];
+        if (existingCard) {
+          nextCardsById[cardId] = {
+            ...existingCard,
+            orderIndex: index,
+          };
+        }
+      });
+
+      destinationCardIds.forEach((cardId, index) => {
+        const existingCard = nextCardsById[cardId];
+        if (existingCard) {
+          nextCardsById[cardId] = {
+            ...existingCard,
+            listType: destinationColumn.tripDayId ? "day" : "bucket",
+            tripDayId: destinationColumn.tripDayId,
+            orderIndex: index,
+          };
+        }
+      });
+
+      return {
+        columnsById: {
+          ...state.columnsById,
+          [sourceColumnId]: {
+            ...sourceColumn,
+            cardIds: sourceCardIds,
+          },
+          [destinationColumnId]: {
+            ...destinationColumn,
+            cardIds: destinationCardIds,
+          },
+        },
+        cardsById: nextCardsById,
+      };
+    });
   },
 }));

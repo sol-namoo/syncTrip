@@ -120,6 +120,21 @@
 - 이후 변경은 full replace가 아니라 patch update로 적용한다.
 - 따라서 Workspace 타입은 `초기 snapshot`과 `실시간 patch`를 구분해서 생각한다.
 
+### 5.2. Why `trip_days`
+
+- 처음에는 `trip_items.day_index`만으로 날짜 컬럼을 표현했다.
+- 하지만 Day 컬럼 자체를 reorder 가능한 엔티티로 열어두려면 날짜도 별도 엔티티여야 한다.
+- 그래서 `trip_days`를 도입하고, `trip_items`는 `trip_day_id`를 참조하도록 바꿨다.
+- 이 결정으로 join과 snapshot 조립은 조금 복잡해졌지만, 나중에 데이터 모델을 다시 갈아엎는 비용보다 지금 구조를 고정하는 쪽을 택했다.
+- 컬럼 순서 변경은 linked list까지 갈 필요는 없고, `trip_days.position`으로 다룬다.
+
+### 5.3. DnD Library Choice
+
+- `dnd-kit`은 더 커스터마이즈 가능하지만, 현재 칸반 UI에는 `@hello-pangea/dnd`가 더 빠르게 맞는다.
+- 이 판단은 [Puck의 drag-and-drop 라이브러리 비교 글](https://puckeditor.com/blog/top-5-drag-and-drop-libraries-for-react)을 읽고 내렸다.
+- 다만 `hello-pangea/dnd`의 컬럼 reorder 가능성은 바로 쓰지 않는다.
+- 현재 모델에서 중요한 건 카드 이동/재정렬이고, Day 컬럼 reorder는 `trip_days` 구조 위에서 후순위로 연다.
+
 ## 6. Realtime and WebSocket
 
 ## 7. Supabase Integration

@@ -6,6 +6,7 @@ import type { Database } from "@/types/database";
 import type {
   BoardColumn,
   TripPlaceCard,
+  TripDayRow,
   WorkspaceMember,
   WorkspaceSnapshot,
 } from "@/types/workspace";
@@ -20,6 +21,7 @@ type MemberSelect = Pick<
   "user_id" | "role"
 >;
 
+type TripDaySelect = TripDayRow;
 type TripItemSelect = Database["public"]["Tables"]["trip_items"]["Row"];
 
 function toTripPlaceCard(item: TripItemSelect): TripPlaceCard {
@@ -34,7 +36,7 @@ function toTripPlaceCard(item: TripItemSelect): TripPlaceCard {
     imageUrl: item.image_url,
     note: item.note,
     listType: item.list_type,
-    dayIndex: item.day_index,
+    tripDayId: item.trip_day_id,
     orderIndex: item.order_index,
     createdBy: item.created_by,
     createdAt: item.created_at,
@@ -42,17 +44,15 @@ function toTripPlaceCard(item: TripItemSelect): TripPlaceCard {
   };
 }
 
-function buildBoardColumns(
-  startDate: string,
-  endDate: string,
-  cards: TripPlaceCard[]
-): BoardColumn[] {
+function buildBoardColumns(days: TripDaySelect[], cards: TripPlaceCard[]): BoardColumn[] {
   const columns: BoardColumn[] = [
     {
       id: "bucket",
       title: "장소 바구니",
+      date: null,
       dateLabel: null,
-      dayIndex: null,
+      tripDayId: null,
+      position: null,
       cardIds: cards
         .filter((card) => card.listType === "bucket")
         .sort((a, b) => a.orderIndex - b.orderIndex)
@@ -60,17 +60,16 @@ function buildBoardColumns(
     },
   ];
 
-  const totalDays = dayjs(endDate).diff(dayjs(startDate), "day") + 1;
-
-  for (let index = 0; index < totalDays; index += 1) {
-    const dayIndex = index + 1;
+  for (const day of days) {
     columns.push({
-      id: `day-${dayIndex}`,
-      title: `Day ${dayIndex}`,
-      dateLabel: dayjs(startDate).add(index, "day").format("M/D"),
-      dayIndex,
+      id: `day-${day.id}`,
+      title: day.title ?? `Day ${day.position}`,
+      date: day.date,
+      dateLabel: dayjs(day.date).format("M/D"),
+      tripDayId: day.id,
+      position: day.position,
       cardIds: cards
-        .filter((card) => card.listType === "day" && card.dayIndex === dayIndex)
+        .filter((card) => card.listType === "day" && card.tripDayId === day.id)
         .sort((a, b) => a.orderIndex - b.orderIndex)
         .map((card) => card.id),
     });
@@ -99,7 +98,11 @@ export async function getWorkspaceSnapshot(
     return null;
   }
 
-  const [{ data: members, error: membersError }, { data: items, error: itemsError }] =
+  const [
+    { data: members, error: membersError },
+    { data: days, error: daysError },
+    { data: items, error: itemsError },
+  ] =
     await Promise.all([
       supabase
         .from("trip_members")
@@ -107,18 +110,28 @@ export async function getWorkspaceSnapshot(
         .eq("trip_id", tripId)
         .overrideTypes<MemberSelect[], { merge: false }>(),
       supabase
+        .from("trip_days")
+        .select("id, trip_id, date, title, position, created_at, updated_at")
+        .eq("trip_id", tripId)
+        .order("position", { ascending: true })
+        .overrideTypes<TripDaySelect[], { merge: false }>(),
+      supabase
         .from("trip_items")
         .select(
-          "id, trip_id, place_id, name, address, lat, lng, image_url, note, list_type, day_index, order_index, created_by, created_at, updated_at"
+          "id, trip_id, place_id, name, address, lat, lng, image_url, note, list_type, trip_day_id, order_index, created_by, created_at, updated_at"
         )
         .eq("trip_id", tripId)
-        .order("day_index", { ascending: true, nullsFirst: true })
+        .order("trip_day_id", { ascending: true, nullsFirst: true })
         .order("order_index", { ascending: true })
         .overrideTypes<TripItemSelect[], { merge: false }>(),
     ]);
 
   if (membersError) {
     throw new Error(membersError.message);
+  }
+
+  if (daysError) {
+    throw new Error(daysError.message);
   }
 
   if (itemsError) {
@@ -145,6 +158,6 @@ export async function getWorkspaceSnapshot(
     },
     members: workspaceMembers,
     cards,
-    columns: buildBoardColumns(trip.start_date, trip.end_date, cards),
+    columns: buildBoardColumns(Array.isArray(days) ? days : [], cards),
   };
 }

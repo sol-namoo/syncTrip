@@ -9,6 +9,8 @@ import type {
 const DEMO_TRIP_ID = "trip-demo-yeongwol";
 const DEMO_CREATED_BY = "user-demo-owner";
 const DEMO_TIMESTAMP = "2026-03-17T09:00:00.000Z";
+const DEMO_DAY_1_ID = "trip-day-demo-1";
+const DEMO_DAY_2_ID = "trip-day-demo-2";
 
 export const DUMMY_WORKSPACE_TRIP: WorkspaceTrip = {
   id: DEMO_TRIP_ID,
@@ -24,25 +26,31 @@ export const DUMMY_COLUMNS: Record<BoardColumnId, BoardColumnEntity> = {
   bucket: {
     id: "bucket",
     title: "장소 바구니",
+    date: null,
     dateLabel: null,
-    dayIndex: null,
+    tripDayId: null,
+    position: null,
     cardIds: [],
   },
-  "day-1": {
-    id: "day-1",
+  [`day-${DEMO_DAY_1_ID}`]: {
+    id: `day-${DEMO_DAY_1_ID}`,
     title: "Day 1: 단종의 발자취를 따라서",
+    date: "2026-04-12",
     dateLabel: "4/12",
-    dayIndex: 1,
+    tripDayId: DEMO_DAY_1_ID,
+    position: 1,
     cardIds: ["card-1", "card-2", "card-3", "card-4", "card-5", "card-6"],
   },
-  "day-2": {
-    id: "day-2",
+  [`day-${DEMO_DAY_2_ID}`]: {
+    id: `day-${DEMO_DAY_2_ID}`,
     title: "Day 2: 영월의 대자연과 별빛",
+    date: "2026-04-13",
     dateLabel: "4/13",
-    dayIndex: 2,
+    tripDayId: DEMO_DAY_2_ID,
+    position: 2,
     cardIds: ["card-7", "card-8", "card-9", "card-10"],
   },
-};
+} as Record<BoardColumnId, BoardColumnEntity>;
 
 export const DUMMY_CARDS: Record<string, BoardCardEntity> = {
   "card-1": {
@@ -57,7 +65,7 @@ export const DUMMY_CARDS: Record<string, BoardCardEntity> = {
     note:
       "사육신을 떠올리며 서쪽(궁궐)을 향해 큰절을 했던 고개. 고갯마루 단종 조각상 앞에서 사진 찍기.",
     listType: "day",
-    dayIndex: 1,
+    tripDayId: DEMO_DAY_1_ID,
     orderIndex: 0,
     createdBy: DEMO_CREATED_BY,
     createdAt: DEMO_TIMESTAMP,
@@ -75,7 +83,7 @@ export const DUMMY_CARDS: Record<string, BoardCardEntity> = {
     note:
       "선착장에서 배 타고 3분 진입. 단종어소를 향해 굽어 자란 관음송 꼭 찾아보기!",
     listType: "day",
-    dayIndex: 1,
+    tripDayId: DEMO_DAY_1_ID,
     orderIndex: 1,
     createdBy: DEMO_CREATED_BY,
     createdAt: DEMO_TIMESTAMP,
@@ -93,7 +101,7 @@ export const DUMMY_CARDS: Record<string, BoardCardEntity> = {
     note:
       "어르신들이 운영하시는 따뜻한 밥집. 연잎밥 정식(1만 1천원) 추천. 4인 이상 예약 필수!",
     listType: "day",
-    dayIndex: 1,
+    tripDayId: DEMO_DAY_1_ID,
     orderIndex: 2,
     createdBy: DEMO_CREATED_BY,
     createdAt: DEMO_TIMESTAMP,
@@ -111,7 +119,7 @@ export const DUMMY_CARDS: Record<string, BoardCardEntity> = {
     note:
       "단종의 능. 무덤으로 오르는 길에 단종을 향해 절을 하듯 굽어있는 소나무 숲 산책.",
     listType: "day",
-    dayIndex: 1,
+    tripDayId: DEMO_DAY_1_ID,
     orderIndex: 3,
     createdBy: DEMO_CREATED_BY,
     createdAt: DEMO_TIMESTAMP,
@@ -129,7 +137,7 @@ export const DUMMY_CARDS: Record<string, BoardCardEntity> = {
     note:
       "단종이 마지막으로 머물렀던 객사. 영월 시내 중심부 상가 사이에 있으니 지도 잘 볼 것.",
     listType: "day",
-    dayIndex: 1,
+    tripDayId: DEMO_DAY_1_ID,
     orderIndex: 4,
     createdBy: DEMO_CREATED_BY,
     createdAt: DEMO_TIMESTAMP,
@@ -147,7 +155,7 @@ export const DUMMY_CARDS: Record<string, BoardCardEntity> = {
     note:
       "영월 서부시장 내 위치. 관풍헌에서 도보 가능. 포장해서 숙소에서 맥주랑 먹기.",
     listType: "day",
-    dayIndex: 1,
+    tripDayId: DEMO_DAY_1_ID,
     orderIndex: 5,
     createdBy: DEMO_CREATED_BY,
     createdAt: DEMO_TIMESTAMP,
@@ -165,7 +173,7 @@ export const DUMMY_CARDS: Record<string, BoardCardEntity> = {
     note:
       "영월역 앞 다슬기 골목의 터줏대감. 전날 마신 맥주를 싹 내려주는 다슬기 해장국으로 하루 시작!",
     listType: "day",
-    dayIndex: 2,
+    tripDayId: DEMO_DAY_2_ID,
     orderIndex: 0,
     createdBy: DEMO_CREATED_BY,
     createdAt: DEMO_TIMESTAMP,
@@ -183,7 +191,7 @@ export const DUMMY_CARDS: Record<string, BoardCardEntity> = {
     note:
       "주차장에서 도보 5분이면 도착. 쪼개진 절벽 사이로 보이는 풍경이 예술. 단종도 감탄했다는 전설이 있음.",
     listType: "day",
-    dayIndex: 2,
+    tripDayId: DEMO_DAY_2_ID,
     orderIndex: 1,
     createdBy: DEMO_CREATED_BY,
     createdAt: DEMO_TIMESTAMP,
@@ -201,7 +209,7 @@ export const DUMMY_CARDS: Record<string, BoardCardEntity> = {
     note:
       "영월 여행의 하이라이트. 주차 후 15분 정도 숲길 트레킹 필요. 뗏목 체험도 시간이 맞으면 추천.",
     listType: "day",
-    dayIndex: 2,
+    tripDayId: DEMO_DAY_2_ID,
     orderIndex: 2,
     createdBy: DEMO_CREATED_BY,
     createdAt: DEMO_TIMESTAMP,
@@ -219,7 +227,7 @@ export const DUMMY_CARDS: Record<string, BoardCardEntity> = {
     note:
       "봉래산 정상에서 보는 영월 시내 야경과 별자리 관측. 꼬불꼬불한 산길 운전 주의. 사전 예약 필수.",
     listType: "day",
-    dayIndex: 2,
+    tripDayId: DEMO_DAY_2_ID,
     orderIndex: 3,
     createdBy: DEMO_CREATED_BY,
     createdAt: DEMO_TIMESTAMP,
@@ -235,5 +243,9 @@ export const DUMMY_WORKSPACE_SNAPSHOT: WorkspaceSnapshot = {
     { userId: "user-demo-editor-2", role: "editor" },
   ],
   cards: Object.values(DUMMY_CARDS),
-  columns: [DUMMY_COLUMNS.bucket, DUMMY_COLUMNS["day-1"], DUMMY_COLUMNS["day-2"]],
+  columns: [
+    DUMMY_COLUMNS.bucket,
+    DUMMY_COLUMNS[`day-${DEMO_DAY_1_ID}`],
+    DUMMY_COLUMNS[`day-${DEMO_DAY_2_ID}`],
+  ],
 };

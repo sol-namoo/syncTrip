@@ -58,7 +58,7 @@
 - Workspace 전체 본문
   - 지도 인터랙션
   - 검색창
-  - dnd-kit 보드
+  - `@hello-pangea/dnd` 기반 보드
   - 멀티 커서 오버레이
   - Realtime presence subscription
 - 3D Passport viewer
@@ -413,7 +413,7 @@
 - 완료 조건
   - 서버 snapshot만으로 보드가 렌더되고, 카드 구조가 확정된다.
 
-#### Task 3-5. dnd-kit 기반 카드 이동 구현
+#### Task 3-5. `@hello-pangea/dnd` 기반 카드 이동 구현
 - 목적
   - 바구니와 Day 컬럼 간 카드 이동, 같은 컬럼 내 재정렬을 구현한다.
 - 작업 내용
