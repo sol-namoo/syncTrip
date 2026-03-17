@@ -120,6 +120,21 @@
 - 이후 변경은 full replace가 아니라 patch update로 적용한다.
 - 따라서 Workspace 타입은 `초기 snapshot`과 `실시간 patch`를 구분해서 생각한다.
 
+### 5.2. Why `trip_days`
+
+- 처음에는 `trip_items.day_index`만으로 날짜 컬럼을 표현했다.
+- 하지만 Day 컬럼 자체를 reorder 가능한 엔티티로 열어두려면 날짜도 별도 엔티티여야 한다.
+- 그래서 `trip_days`를 도입하고, `trip_items`는 `trip_day_id`를 참조하도록 바꿨다.
+- 이 결정으로 join과 snapshot 조립은 조금 복잡해졌지만, 나중에 데이터 모델을 다시 갈아엎는 비용보다 지금 구조를 고정하는 쪽을 택했다.
+- 컬럼 순서 변경은 linked list까지 갈 필요는 없고, `trip_days.position`으로 다룬다.
+
+### 5.3. DnD Library Choice
+
+- `dnd-kit`은 더 커스터마이즈 가능하지만, 현재 칸반 UI에는 `@hello-pangea/dnd`가 더 빠르게 맞는다.
+- 이 판단은 [Puck의 drag-and-drop 라이브러리 비교 글](https://puckeditor.com/blog/top-5-drag-and-drop-libraries-for-react)을 읽고 내렸다.
+- 다만 `hello-pangea/dnd`의 컬럼 reorder 가능성은 바로 쓰지 않는다.
+- 현재 모델에서 중요한 건 카드 이동/재정렬이고, Day 컬럼 reorder는 `trip_days` 구조 위에서 후순위로 연다.
+
 ## 6. Realtime and WebSocket
 
 ## 7. Supabase Integration
@@ -154,9 +169,33 @@
 - 외부 서비스 호출이나 서버 비밀값이 필요하면 Edge Function
 - 앱 서버에서 인증, 리다이렉트, 페이지 조립과 함께 처리하면 Next.js 서버 코드
 
+### 7.2. DnD Save Strategy
+
+- 카드 이동 저장 방식에는 두 가지 선택지가 있었다.
+
+#### 옵션 A. DB 재계산형
+
+- 프론트는 `itemId`, `source`, `destination`, `destinationIndex`만 보낸다.
+- DB 함수가 source/destination 리스트를 다시 읽고 `order_index`를 재계산한다.
+
+#### 옵션 B. 최종 순서 전달형
+
+- 프론트는 optimistic update 후 source/destination의 최종 `itemIds` 배열을 계산한다.
+- 실제 RPC 호출 시에는 이 최종 정렬 결과에 더해, 이동 대상 item과 destination 같은 최소한의 메타정보를 함께 보낸다.
+- DB 함수는 그 순서대로 `order_index`를 트랜잭션으로 확정한다.
+
+#### 현재 선택
+
+- SyncTrip은 현재 `columnsById[columnId].cardIds`가 이미 최종 순서를 알고 있는 구조라서 옵션 B를 선택했다.
+- 이유:
+  - 프론트가 이미 계산한 결과를 그대로 저장할 수 있다.
+  - rollback이 단순하다.
+  - 현재 Zustand 구조와 연결이 더 자연스럽다.
+
 ## 8. Future Topics
 
 - optimistic update 허용 범위
 - `trip_items` 설계 원칙
 - 서버 컴포넌트와 클라이언트 컴포넌트 분리 기준
 - 3D passport용 데이터 shape 기준
+- JavaScript 모듈, 싱글톤, 라이브러리 내부 공유 상태 구조

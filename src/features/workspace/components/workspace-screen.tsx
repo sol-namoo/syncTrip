@@ -32,16 +32,16 @@ export function WorkspaceScreen({
   const columns = columnOrder
     .map((columnId) => columnsById[columnId])
     .filter((column): column is NonNullable<typeof column> => Boolean(column));
-  const dayColumns = columns.filter((column) => column.dayIndex !== null);
+  const dayColumns = columns.filter((column) => column.tripDayId !== null);
   const totalCards = Object.keys(cardsById).length || snapshot.cards.length;
 
   return (
-    <main className="flex min-h-screen flex-col">
+    <main className="flex min-h-screen flex-col xl:h-screen xl:overflow-hidden">
       <WorkspaceHeader trip={boardTrip} tripId={tripId} user={user} />
 
-      <div className="grid flex-1 grid-cols-1 xl:grid-cols-[1.05fr_1.75fr]">
+      <div className="grid flex-1 grid-cols-1 xl:min-h-0 xl:grid-cols-[1.05fr_1.75fr]">
         <section className="border-b border-gray-200 bg-white xl:border-b-0 xl:border-r">
-          <div className="flex h-full flex-col">
+          <div className="flex h-full flex-col xl:min-h-0">
             <div className="border-b border-gray-200 px-5 py-4">
               <div className="flex items-center justify-between gap-4">
                 <h2 className="text-xl font-semibold text-gray-900">지도 뷰</h2>
@@ -59,7 +59,7 @@ export function WorkspaceScreen({
               </div>
             </div>
 
-            <div className="relative flex-1 overflow-hidden bg-[#f8fafc]">
+            <div className="relative flex-1 overflow-hidden bg-[#f8fafc] xl:min-h-0">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.92),rgba(241,245,249,0.72))]" />
               <div className="absolute inset-x-0 bottom-[72px] flex flex-col items-center justify-center text-center text-gray-500">
                 <div className="mb-4 text-5xl">◎</div>
@@ -74,7 +74,11 @@ export function WorkspaceScreen({
           </div>
         </section>
 
-        <WorkspaceBoard columns={columns} cardsById={cardsById} />
+        <WorkspaceBoard
+          columns={columns}
+          cardsById={cardsById}
+          tripId={tripId}
+        />
       </div>
 
       <button className="fixed bottom-5 right-5 inline-flex size-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm">

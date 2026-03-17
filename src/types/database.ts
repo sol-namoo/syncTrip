@@ -57,6 +57,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      trip_days: {
+        Row: {
+          id: string;
+          trip_id: string;
+          date: string;
+          title: string | null;
+          position: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          date: string;
+          title?: string | null;
+          position: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          date?: string;
+          title?: string | null;
+          position?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       trip_items: {
         Row: {
           id: string;
@@ -69,7 +99,7 @@ export type Database = {
           image_url: string | null;
           note: string;
           list_type: string;
-          day_index: number | null;
+          trip_day_id: string | null;
           order_index: number;
           created_by: string;
           created_at: string;
@@ -86,7 +116,7 @@ export type Database = {
           image_url?: string | null;
           note?: string;
           list_type?: string;
-          day_index?: number | null;
+          trip_day_id?: string | null;
           order_index?: number;
           created_by: string;
           created_at?: string;
@@ -103,7 +133,7 @@ export type Database = {
           image_url?: string | null;
           note?: string;
           list_type?: string;
-          day_index?: number | null;
+          trip_day_id?: string | null;
           order_index?: number;
           created_by?: string;
           created_at?: string;
@@ -140,6 +170,16 @@ export type Database = {
       touch_trip_updated_at: {
         Args: {
           p_trip_id: string;
+        };
+        Returns: void;
+      };
+      move_trip_item: {
+        Args: {
+          p_trip_id: string;
+          p_item_id: string;
+          p_destination_trip_day_id: string | null;
+          p_source_item_ids: string[];
+          p_destination_item_ids: string[];
         };
         Returns: void;
       };
