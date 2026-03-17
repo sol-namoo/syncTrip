@@ -30,18 +30,17 @@ export function buildWorkspaceCapabilities(
     case "editor":
       return {
         canPersist: true,
-        canInvite: false,
+        canInvite: true,
         canExport: true,
         canDeleteTrip: false,
         canManageTrip: false,
         canEditItems: true,
       };
-    case "viewer":
     default:
       return {
         canPersist: false,
         canInvite: false,
-        canExport: true,
+        canExport: false,
         canDeleteTrip: false,
         canManageTrip: false,
         canEditItems: false,
@@ -52,15 +51,15 @@ export function buildWorkspaceCapabilities(
 export function resolveWorkspaceRole(
   userId: string | null | undefined,
   members: WorkspaceMember[]
-): WorkspaceRole {
+): Exclude<WorkspaceRole, "demo"> | null {
   if (!userId) {
-    return "viewer";
+    return null;
   }
 
   const member = members.find((item) => item.userId === userId);
 
   if (!member) {
-    return "viewer";
+    return null;
   }
 
   if (member.role === "owner") {

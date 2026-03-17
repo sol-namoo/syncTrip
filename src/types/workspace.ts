@@ -21,13 +21,14 @@ export type WorkspaceMember = {
   role: TripMemberRole;
 };
 
-export type WorkspaceRole = "demo" | "owner" | "editor" | "viewer";
+export type WorkspaceRole = "demo" | "owner" | "editor";
 
 export type WorkspaceCapabilities = {
   canPersist: boolean;
   canInvite: boolean;
   canExport: boolean;
   canDeleteTrip: boolean;
+  // Trip title/date/destination and similar workspace-level settings.
   canManageTrip: boolean;
   canEditItems: boolean;
 };

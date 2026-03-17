@@ -475,14 +475,14 @@
   - Workspace 역할 정의
     - `owner`
     - `editor`
-    - 필요 시 `viewer`
     - 데모 화면 제약은 별도 임시 플래그가 아니라 최종 권한 모델에 포함해 정리
+    - 읽기 전용 공유 사용자는 `workspace`가 아니라 `share` 라우트에서 처리
   - 역할별 capability 정의
     - `canPersist`
     - `canInvite`
     - `canExport`
     - `canDeleteTrip`
-    - `canManageTrip`
+    - `canManageTrip` (`trip` 엔티티 자체의 메타데이터/설정 수정)
   - 헤더 CTA, DnD, 저장, 삭제 같은 주요 액션이 capability를 기준으로 열리고 잠기도록 설계
 - 관련 파일/폴더
   - `src/features/workspace/components/invite-modal.tsx`

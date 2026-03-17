@@ -23,8 +23,14 @@ export default async function WorkspacePage({
     notFound();
   }
 
+  const role = resolveWorkspaceRole(user?.id, snapshot.members);
+
+  if (!role) {
+    notFound();
+  }
+
   const actor = buildWorkspaceActor({
-    role: resolveWorkspaceRole(user?.id, snapshot.members),
+    role,
     user: user
       ? {
           id: user.id,
