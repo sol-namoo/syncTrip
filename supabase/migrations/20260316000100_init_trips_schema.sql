@@ -6,7 +6,7 @@ create table public.trips (
   destination text,
   start_date date not null,
   end_date date not null,
-  last_edited_by uuid references auth.users(id) on delete set null,
+  last_updated_by uuid references auth.users(id) on delete set null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -90,7 +90,7 @@ begin
     start_date,
     end_date,
     destination,
-    last_edited_by
+    last_updated_by
   )
   values (
     p_title,

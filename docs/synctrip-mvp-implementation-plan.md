@@ -250,11 +250,11 @@
   - 목록 탐색과 재진입 동선을 완성한다.
 - 작업 내용
   - 카드 그리드, 빈 상태, 로딩 스켈레톤, 탭 필터 구현
-  - 최근 수정순 정렬과 초대/내 여행 뱃지 노출
+  - `내 여행 / 초대된 여행` 탭 필터와 고정된 최신순 정렬 기준 적용
 - 관련 파일/폴더
   - `src/features/trips/components/trips-dashboard.tsx`
   - `src/features/trips/components/trip-card.tsx`
-  - `src/app/trips/page.tsx`
+  - `src/app/(main)/trips/page.tsx`
 - 필요한 상태/타입
   - `TripsFilterTab`, `TripCardViewModel`
 - Supabase 연동 필요 여부

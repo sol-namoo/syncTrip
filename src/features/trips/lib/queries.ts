@@ -15,6 +15,7 @@ function toTripListItem(item: TripMembershipResult): TripListItem | null {
     startDate: trip.start_date,
     endDate: trip.end_date,
     createdAt: trip.created_at,
+    updatedAt: trip.updated_at,
     role: item.role,
   };
 }
@@ -45,12 +46,13 @@ export async function getMyTrips(): Promise<TripListItem[]> {
           destination,
           start_date,
           end_date,
-          created_at
+          created_at,
+          updated_at
         )
       `,
     )
     .eq("user_id", user.id)
-    .order("created_at", { ascending: false, referencedTable: "trips" })
+    .order("updated_at", { ascending: false, referencedTable: "trips" })
     .returns<TripMembershipResult[]>();
 
   if (error) {
