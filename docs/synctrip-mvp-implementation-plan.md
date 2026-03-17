@@ -249,14 +249,16 @@
 - 목적
   - 목록 탐색과 재진입 동선을 완성한다.
 - 작업 내용
-  - 카드 그리드, 빈 상태, 로딩 스켈레톤, 탭 필터 구현
-  - 최근 수정순 정렬과 초대/내 여행 뱃지 노출
+  - 카드 그리드, 빈 상태, 로딩 스켈레톤 구현
+  - 접근 가능한 모든 여행을 최신순으로 노출
+  - 목록 탭 필터 전체는 post-MVP로 보류
+    - 탭을 실제 기능으로 도입하려면 페이지네이션, 검색, 정렬 우선순위, owner/editor 혼합 정책을 먼저 정해야 한다.
 - 관련 파일/폴더
   - `src/features/trips/components/trips-dashboard.tsx`
   - `src/features/trips/components/trip-card.tsx`
-  - `src/app/trips/page.tsx`
+  - `src/app/(main)/trips/page.tsx`
 - 필요한 상태/타입
-  - `TripsFilterTab`, `TripCardViewModel`
+  - `TripCardViewModel`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
@@ -272,13 +274,15 @@
 - 목적
   - 제목/기간만으로 새 여행을 만들고 Workspace로 이동시킨다.
 - 작업 내용
-  - 생성 모달 UI, 폼 검증, Supabase insert, 기본 Day 수 계산
-  - 생성 성공 시 `trip_members`에 owner row 생성
+  - 생성 모달 UI, 폼 검증, 최대 21일 기간 제한 적용
+  - `create_trip_with_owner` RPC로 trip과 owner membership을 함께 생성
   - 성공 후 `/workspace/[id]` 이동
 - 관련 파일/폴더
-  - `src/features/trips/components/create-trip-modal.tsx`
+  - `src/features/trips/components/create-trip-dialog.tsx`
   - `src/features/trips/lib/mutations.ts`
-  - `src/app/trips/page.tsx`
+  - `src/features/trips/hooks/useCreateTripMutation.ts`
+  - `src/app/(main)/trips/page.tsx`
+  - `supabase/migrations`
 - 필요한 상태/타입
   - `CreateTripInput`, `TripRole`
 - Supabase 연동 필요 여부
@@ -288,7 +292,7 @@
 - 난이도
   - 중
 - 리스크
-  - 여행 기간과 Day 컬럼 생성 규칙이 백엔드/프론트에서 달라지면 초기 보드가 틀어진다.
+  - 여행 기간과 Day 컬럼 생성 규칙이 프론트 검증과 RPC 검증에서 달라지면 초기 보드가 틀어진다.
 - 완료 조건
   - 모달에서 여행 생성 후 즉시 해당 Workspace로 진입한다.
 
