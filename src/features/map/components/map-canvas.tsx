@@ -6,8 +6,9 @@ import {
   Map,
   Pin,
   type MapCameraChangedEvent,
+  useMap,
 } from "@vis.gl/react-google-maps";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 type MapMarkerViewModel = {
@@ -38,6 +39,35 @@ function getAverageCenter(markers: MapMarkerViewModel[]) {
   };
 }
 
+function SelectedMarkerPanner({
+  marker,
+}: {
+  marker: Pick<MapMarkerViewModel, "lat" | "lng"> | null;
+}) {
+  const map = useMap();
+  const previousMarkerRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!map || !marker) {
+      return;
+    }
+
+    const nextKey = `${marker.lat}:${marker.lng}`;
+
+    if (previousMarkerRef.current === nextKey) {
+      return;
+    }
+
+    map.panTo({
+      lat: marker.lat,
+      lng: marker.lng,
+    });
+    previousMarkerRef.current = nextKey;
+  }, [map, marker]);
+
+  return null;
+}
+
 export function MapCanvas({
   markers,
   onSelectMarker,
@@ -52,23 +82,7 @@ export function MapCanvas({
     () => markers.find((marker) => marker.isSelected) ?? null,
     [markers]
   );
-  const [center, setCenter] = useState(defaultCenter);
   const [zoom, setZoom] = useState(11);
-
-  useEffect(() => {
-    setCenter(defaultCenter);
-  }, [defaultCenter]);
-
-  useEffect(() => {
-    if (!selectedMarker) {
-      return;
-    }
-
-    setCenter({
-      lat: selectedMarker.lat,
-      lng: selectedMarker.lng,
-    });
-  }, [selectedMarker]);
 
   if (!apiKey) {
     return (
@@ -89,8 +103,8 @@ export function MapCanvas({
   return (
     <APIProvider apiKey={apiKey} libraries={["places"]}>
       <Map
-        center={center}
-        zoom={zoom}
+        defaultCenter={defaultCenter}
+        defaultZoom={zoom}
         mapId={mapId}
         gestureHandling="greedy"
         disableDefaultUI
@@ -102,6 +116,7 @@ export function MapCanvas({
           setZoom(event.detail.zoom);
         }}
       >
+        <SelectedMarkerPanner marker={selectedMarker} />
         {markers.map((marker) => (
           <AdvancedMarker
             key={marker.id}
