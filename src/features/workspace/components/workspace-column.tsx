@@ -8,9 +8,11 @@ import type { BoardColumnEntity, BoardCardEntity } from "@/types/workspace";
 export function WorkspaceColumn({
   column,
   cards,
+  registerCardElement,
 }: {
   column: BoardColumnEntity;
   cards: BoardCardEntity[];
+  registerCardElement: (cardId: string, element: HTMLDivElement | null) => void;
 }) {
   const isBucket = column.id === "bucket";
 
@@ -52,14 +54,15 @@ export function WorkspaceColumn({
                 {cards.map((card, index) => (
                   <Draggable key={card.id} draggableId={card.id} index={index}>
                     {(draggableProvided, draggableSnapshot) => (
-                      <div
-                        ref={draggableProvided.innerRef}
-                        {...draggableProvided.draggableProps}
-                      >
+                      <div {...draggableProvided.draggableProps}>
                         <PlaceCard
                           card={card}
                           dragHandleProps={draggableProvided.dragHandleProps}
                           isDragging={draggableSnapshot.isDragging}
+                          cardRef={(element) => {
+                            draggableProvided.innerRef(element);
+                            registerCardElement(card.id, element);
+                          }}
                         />
                       </div>
                     )}

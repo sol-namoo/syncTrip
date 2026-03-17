@@ -1,6 +1,7 @@
 "use client";
 
 import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
+import { useEffect, useRef } from "react";
 import { useMoveTripItemMutation } from "@/features/workspace/hooks/use-move-trip-item-mutation";
 import { WorkspaceColumn } from "@/features/workspace/components/workspace-column";
 import { toast } from "@/components/ui/toast";
@@ -26,7 +27,27 @@ export function WorkspaceBoard({
   const moveCard = useWorkspaceBoardStore((state) => state.moveCard);
   const replaceBoardState = useWorkspaceBoardStore((state) => state.replaceBoardState);
   const mutation = useMoveTripItemMutation();
+  const selectedCardId = useWorkspaceUiStore((state) => state.selectedCardId);
   const setSaveState = useWorkspaceUiStore((state) => state.setSaveState);
+  const cardElementsRef = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    if (!selectedCardId) {
+      return;
+    }
+
+    const element = cardElementsRef.current[selectedCardId];
+
+    if (!element) {
+      return;
+    }
+
+    element.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "nearest",
+    });
+  }, [selectedCardId]);
 
   async function handleDragEnd(result: DropResult) {
     if (!capabilities.canEditItems || !capabilities.canPersist) {
@@ -116,6 +137,9 @@ export function WorkspaceBoard({
               cards={column.cardIds
                 .map((cardId) => cardsById[cardId])
                 .filter((card): card is BoardCardEntity => Boolean(card))}
+              registerCardElement={(cardId, element) => {
+                cardElementsRef.current[cardId] = element;
+              }}
             />
           ))}
         </div>
