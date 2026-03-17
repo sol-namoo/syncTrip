@@ -34,8 +34,12 @@ export function WorkspaceScreen({
       <WorkspaceHeader trip={boardTrip} tripId={tripId} actor={actor} />
 
       <div className="grid flex-1 grid-cols-1 xl:min-h-0 xl:grid-cols-[1.05fr_1.75fr]">
-        <MapShell columns={columns} cards={cards} />
-
+        <MapShell
+          columns={columns}
+          cards={cards}
+          tripId={tripId}
+          capabilities={actor.capabilities}
+        />
         <WorkspaceBoard
           columns={columns}
           cardsById={cardsById}
