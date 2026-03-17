@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Plane } from "lucide-react";
 import { ProfileMenu } from "@/features/auth/components/profile-menu";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,8 +19,9 @@ export default async function MainLayout({ children }: { children: ReactNode }) 
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/80 bg-white">
         <div className="mx-auto flex h-[68px] max-w-6xl items-center justify-between px-6 lg:px-10">
-          <Link href="/trips" className="text-2xl font-semibold tracking-tight">
-            SyncTrip
+          <Link href="/trips" className="flex items-center gap-2 text-2xl font-bold text-gray-900">
+            <Plane className="size-8 text-blue-600" />
+            <span>SyncTrip</span>
           </Link>
           <ProfileMenu
             email={user.email}
