@@ -70,6 +70,14 @@ export type RemoteCursor = {
 
 export type EditingPresenceMap = Record<string, string>;
 
+export type MoveTripItemInput = {
+  tripId: string;
+  itemId: string;
+  destinationTripDayId: string | null;
+  sourceItemIds: string[];
+  destinationItemIds: string[];
+};
+
 export type WorkspaceSnapshot = {
   trip: WorkspaceTrip;
   members: WorkspaceMember[];

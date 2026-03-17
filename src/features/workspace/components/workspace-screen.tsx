@@ -74,7 +74,11 @@ export function WorkspaceScreen({
           </div>
         </section>
 
-        <WorkspaceBoard columns={columns} cardsById={cardsById} />
+        <WorkspaceBoard
+          columns={columns}
+          cardsById={cardsById}
+          tripId={tripId}
+        />
       </div>
 
       <button className="fixed bottom-5 right-5 inline-flex size-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm">

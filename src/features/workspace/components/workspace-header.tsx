@@ -1,8 +1,28 @@
 "use client";
 
 import { Plane } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { ProfileMenu } from "@/features/auth/components/profile-menu";
+import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
+import type { SaveIndicatorState } from "@/types/workspace";
 import type { WorkspaceTrip } from "@/types/workspace";
+
+const SAVE_STATE_LABEL: Record<SaveIndicatorState, string> = {
+  idle: "Idle",
+  saving: "Saving...",
+  saved: "Saved",
+  error: "Save failed",
+};
+
+const SAVE_STATE_TONE: Record<
+  SaveIndicatorState,
+  "neutral" | "primary" | "success" | "danger"
+> = {
+  idle: "neutral",
+  saving: "primary",
+  saved: "success",
+  error: "danger",
+};
 
 export function WorkspaceHeader({
   trip,
@@ -17,6 +37,8 @@ export function WorkspaceHeader({
     avatarUrl?: string;
   } | null;
 }) {
+  const saveState = useWorkspaceUiStore((state) => state.saveState);
+
   return (
     <section className="border-b border-gray-200 bg-white">
       <div className="flex h-[72px] items-center justify-between gap-4 px-6">
@@ -34,6 +56,9 @@ export function WorkspaceHeader({
         </div>
 
         <div className="flex items-center gap-4">
+          {saveState !== "idle" ? (
+            <Badge tone={SAVE_STATE_TONE[saveState]}>{SAVE_STATE_LABEL[saveState]}</Badge>
+          ) : null}
           <button
             type="button"
             className="hidden rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:from-blue-700 hover:to-purple-700 md:block"

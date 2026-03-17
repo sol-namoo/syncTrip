@@ -173,6 +173,16 @@ export type Database = {
         };
         Returns: void;
       };
+      move_trip_item: {
+        Args: {
+          p_trip_id: string;
+          p_item_id: string;
+          p_destination_trip_day_id: string | null;
+          p_source_item_ids: string[];
+          p_destination_item_ids: string[];
+        };
+        Returns: void;
+      };
     };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

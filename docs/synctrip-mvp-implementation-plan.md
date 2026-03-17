@@ -466,17 +466,29 @@
 
 #### Task 3-7. 초대 버튼과 링크 복사 플로우 구현
 - 목적
-  - 멤버 초대 UX를 MVP 범위 내에서 마무리한다.
+  - 멤버 초대 UX와 Workspace 권한 모델을 MVP 범위 내에서 마무리한다.
 - 작업 내용
   - 헤더 초대 버튼
   - 초대 모달
   - 링크 복사
   - 공유 권한 정책에 맞는 URL 생성
+  - Workspace 역할 정의
+    - `owner`
+    - `editor`
+    - 필요 시 `viewer`
+    - 데모 화면 제약은 별도 임시 플래그가 아니라 최종 권한 모델에 포함해 정리
+  - 역할별 capability 정의
+    - `canPersist`
+    - `canInvite`
+    - `canExport`
+    - `canDeleteTrip`
+    - `canManageTrip`
+  - 헤더 CTA, DnD, 저장, 삭제 같은 주요 액션이 capability를 기준으로 열리고 잠기도록 설계
 - 관련 파일/폴더
   - `src/features/workspace/components/invite-modal.tsx`
   - `src/features/workspace/lib/share.ts`
 - 필요한 상태/타입
-  - `InviteLinkPayload`
+  - `InviteLinkPayload`, `WorkspaceRole`, `WorkspaceCapabilities`
 - Supabase 연동 필요 여부
   - 정책에 따라 다름
 - 선행조건
@@ -667,7 +679,7 @@
   - Task 5-1, Task 3-6
 - 난이도
   - 중
-- 리스크
+- 리스크 
   - 진짜 lock이 아니라 표시용 상태이므로 동시에 수정은 여전히 가능하다.
 - 완료 조건
   - 카드마다 현재 편집 중인 사용자가 표시되고, 충돌 가능성 배너가 노출된다.

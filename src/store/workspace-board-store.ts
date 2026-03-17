@@ -14,6 +14,12 @@ type WorkspaceBoardState = {
   columnsById: Partial<Record<BoardColumnId, BoardColumnEntity>>;
   cardsById: Record<string, BoardCardEntity>;
   initializeFromSnapshot: (snapshot: WorkspaceSnapshot) => void;
+  replaceBoardState: (input: {
+    trip: WorkspaceTrip | null;
+    columnOrder: BoardColumnId[];
+    columnsById: Partial<Record<BoardColumnId, BoardColumnEntity>>;
+    cardsById: Record<string, BoardCardEntity>;
+  }) => void;
   upsertCard: (card: TripPlaceCard) => void;
   removeCard: (cardId: string) => void;
   setColumnCardIds: (columnId: BoardColumnId, cardIds: string[]) => void;
@@ -56,6 +62,9 @@ export const useWorkspaceBoardStore = create<WorkspaceBoardState>((set) => ({
   cardsById: {},
   initializeFromSnapshot: (snapshot) => {
     set(normalizeSnapshot(snapshot));
+  },
+  replaceBoardState: (input) => {
+    set(input);
   },
   upsertCard: (card) => {
     set((state) => ({
