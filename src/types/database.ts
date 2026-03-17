@@ -57,6 +57,60 @@ export type Database = {
         };
         Relationships: [];
       };
+      trip_items: {
+        Row: {
+          id: string;
+          trip_id: string;
+          place_id: string;
+          name: string;
+          address: string;
+          lat: number;
+          lng: number;
+          image_url: string | null;
+          note: string;
+          list_type: string;
+          day_index: number | null;
+          order_index: number;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          trip_id: string;
+          place_id: string;
+          name: string;
+          address: string;
+          lat: number;
+          lng: number;
+          image_url?: string | null;
+          note?: string;
+          list_type?: string;
+          day_index?: number | null;
+          order_index?: number;
+          created_by: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          trip_id?: string;
+          place_id?: string;
+          name?: string;
+          address?: string;
+          lat?: number;
+          lng?: number;
+          image_url?: string | null;
+          note?: string;
+          list_type?: string;
+          day_index?: number | null;
+          order_index?: number;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

@@ -1,7 +1,7 @@
 import type { Database } from "@/types/database";
+import type { TripMemberRole } from "@/types/trip";
 
 export type TripRow = Database["public"]["Tables"]["trips"]["Row"];
-export type TripMemberRow = Database["public"]["Tables"]["trip_members"]["Row"];
 export type TripsListResult =
   Database["public"]["Functions"]["get_my_trips_with_member_count"]["Returns"][number];
 
@@ -14,7 +14,7 @@ export type TripListItem = {
   createdAt: string;
   updatedAt: string;
   memberCount: number;
-  role: TripMemberRow["role"];
+  role: TripMemberRole;
 };
 
 export type CreateTripInput = {
