@@ -1,4 +1,6 @@
+import { notFound } from "next/navigation";
 import { ProfileMenu } from "@/features/auth/components/profile-menu";
+import { getWorkspaceSnapshot } from "@/features/workspace/lib/queries";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function WorkspacePage({
@@ -11,6 +13,13 @@ export default async function WorkspacePage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const snapshot = await getWorkspaceSnapshot(id);
+
+  if (!snapshot) {
+    notFound();
+  }
+
+  const dayColumns = snapshot.columns.filter((column) => column.dayIndex !== null);
 
   return (
     <main className="flex min-h-screen flex-col">
@@ -20,9 +29,11 @@ export default async function WorkspacePage({
             <div className="text-2xl font-semibold tracking-tight">SyncTrip</div>
             <div className="h-6 w-px bg-border" />
             <div className="min-w-0">
-              <p className="truncate text-lg font-semibold">오사카 벚꽃 투어</p>
+              <p className="truncate text-lg font-semibold">{snapshot.trip.title}</p>
             </div>
-            <p className="hidden text-sm text-muted-foreground md:block">2026-04-12 ~ 2026-04-15</p>
+            <p className="hidden text-sm text-muted-foreground md:block">
+              {snapshot.trip.startDate} ~ {snapshot.trip.endDate}
+            </p>
             <p className="hidden text-xs text-muted-foreground xl:block">Workspace #{id}</p>
           </div>
           <div className="flex items-center gap-3">
@@ -47,18 +58,17 @@ export default async function WorkspacePage({
               <div className="flex items-center justify-between gap-4">
                 <h2 className="text-xl font-semibold">지도 뷰</h2>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="size-2.5 rounded-full bg-blue-500" />
-                    Day 1
-                  </span>
-                  <span className="inline-flex items-center gap-2">
-                    <span className="size-2.5 rounded-full bg-red-400" />
-                    Day 2
-                  </span>
-                  <span className="inline-flex items-center gap-2">
-                    <span className="size-2.5 rounded-full bg-green-500" />
-                    Day 3
-                  </span>
+                  {dayColumns.map((column, index) => (
+                    <span key={column.id} className="inline-flex items-center gap-2">
+                      <span
+                        className="size-2.5 rounded-full"
+                        style={{
+                          backgroundColor: ["#3b82f6", "#f87171", "#22c55e", "#a855f7"][index % 4],
+                        }}
+                      />
+                      {column.title}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
@@ -73,7 +83,7 @@ export default async function WorkspacePage({
             </div>
 
             <div className="border-t px-5 py-4 text-sm text-muted-foreground">
-              총 4개 장소 · 예상 이동 거리 12.5km
+              총 {snapshot.cards.length}개 장소 · 예상 이동 거리 12.5km
             </div>
           </div>
         </section>
@@ -83,7 +93,7 @@ export default async function WorkspacePage({
             <div className="min-h-full w-[290px] shrink-0 rounded-3xl border bg-card">
               <div className="border-b px-5 py-4">
                 <div className="space-y-1">
-                  <p className="text-2xl font-semibold">장소 바구니</p>
+                  <p className="text-2xl font-semibold">{snapshot.columns[0]?.title ?? "장소 바구니"}</p>
                 </div>
                 <div className="mt-4 rounded-xl border px-4 py-3 text-sm text-muted-foreground">
                   장소 검색 입력 영역
@@ -91,6 +101,9 @@ export default async function WorkspacePage({
               </div>
               <div className="flex flex-1 flex-col gap-4 p-4">
                 <div className="h-[220px] rounded-2xl border bg-muted/30" />
+                <p className="text-sm text-muted-foreground">
+                  {snapshot.columns[0]?.cardIds.length ?? 0}개 장소
+                </p>
               </div>
               <div className="border-t p-4">
                 <div className="flex h-11 items-center justify-center rounded-2xl border border-dashed text-sm text-muted-foreground">
@@ -99,16 +112,17 @@ export default async function WorkspacePage({
               </div>
             </div>
 
-            {["Day 1", "Day 2", "Day 3"].map((column) => (
-              <div key={column} className="min-h-full w-[300px] shrink-0 rounded-3xl border bg-card">
+            {dayColumns.map((column) => (
+              <div key={column.id} className="min-h-full w-[300px] shrink-0 rounded-3xl border bg-card">
                 <div className="border-b px-5 py-4">
                   <div className="flex items-center justify-between">
-                    <p className="text-2xl font-semibold">{column}</p>
-                    <span className="text-sm font-medium text-muted-foreground">날짜</span>
+                    <p className="text-2xl font-semibold">{column.title}</p>
+                    <span className="text-sm font-medium text-muted-foreground">{column.dateLabel}</span>
                   </div>
                 </div>
                 <div className="flex flex-1 flex-col gap-4 p-4">
                   <div className="h-56 rounded-2xl border border-dashed border-border bg-muted/20" />
+                  <p className="text-sm text-muted-foreground">{column.cardIds.length}개 장소</p>
                 </div>
               </div>
             ))}

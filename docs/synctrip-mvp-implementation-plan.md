@@ -258,7 +258,7 @@
   - `src/features/trips/components/trip-card.tsx`
   - `src/app/(main)/trips/page.tsx`
 - 필요한 상태/타입
-  - `TripCardViewModel`
+  - `TripItemViewModel`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
@@ -302,8 +302,8 @@
 - 목적
   - 칸반과 지도, 3D 결과가 같은 데이터를 바라보게 만든다.
 - 작업 내용
-  - `trip_cards`, `trip_members` 기준 DB 타입 확장
-  - UI용 `BoardColumn`, `PlaceCard`, `WorkspaceSnapshot` 타입 정의
+  - `trip_items`, `trip_members` 기준 DB 타입 확장
+  - UI용 `BoardColumn`, `TripPlaceCard`, `WorkspaceSnapshot` 타입 정의
   - 카드 row에 필요한 필드 고정
     - `id`, `trip_id`, `place_id`, `name`, `address`, `lat`, `lng`, `image_url`, `note`, `list_type`, `day_index`, `order_index`, `created_by`, `updated_at`
 - 관련 파일/폴더
@@ -311,7 +311,7 @@
   - `src/types/workspace.ts`
   - `src/types/trip.ts`
 - 필요한 상태/타입
-  - `TripCardRow`, `BoardColumnId`, `WorkspaceSnapshot`
+  - `TripItemRow`, `BoardColumnId`, `WorkspaceSnapshot`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
@@ -513,13 +513,13 @@
   - 사용자가 장소를 검색하고 바구니에 추가하는 경로를 완성한다.
 - 작업 내용
   - 검색 input, debounce, 결과 dropdown, 로딩/빈 상태
-  - 검색 결과를 `trip_cards`의 basket 카드로 insert
+  - 검색 결과를 `trip_items`의 basket 항목으로 insert
 - 관련 파일/폴더
   - `src/features/workspace/components/place-search-bar.tsx`
   - `src/features/workspace/components/place-search-results.tsx`
   - `src/features/workspace/lib/mutations.ts`
 - 필요한 상태/타입
-  - `PlaceSearchQueryState`, `CreateTripCardInput`
+  - `PlaceSearchQueryState`, `CreateTripItemInput`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
@@ -566,7 +566,7 @@
 - 작업 내용
   - trip 단위 채널 네이밍 규칙 정의: `trip:{tripId}`
   - presence, cursor, editing-lock, transient drag 상태 payload 타입 정의
-  - `postgres_changes` 대상 테이블 정의: `trip_cards`, `trip_members`
+  - `postgres_changes` 대상 테이블 정의: `trip_items`, `trip_members`
 - 관련 파일/폴더
   - `src/types/realtime.ts`
   - `src/features/workspace/lib/realtime-channel.ts`
@@ -665,7 +665,7 @@
 - 목적
   - 다른 사용자의 변경이 내 화면에도 즉시 반영되게 한다.
 - 작업 내용
-  - `trip_cards` `postgres_changes` 구독
+  - `trip_items` `postgres_changes` 구독
   - row insert/update/delete를 현재 보드 store에 반영
   - 로컬 optimistic 상태와 충돌 시 server row 기준 정렬 재계산
 - 관련 파일/폴더
@@ -673,7 +673,7 @@
   - `src/features/workspace/lib/reconcile-trip-cards.ts`
   - `src/store/workspace-ui-store.ts`
 - 필요한 상태/타입
-  - `TripCardRow`, `RealtimeCardMutation`
+  - `TripItemRow`, `RealtimeItemMutation`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
@@ -788,7 +788,7 @@
   - `id`, `name`, `start_date`, `end_date`, `created_at`
 - `trip_members`
   - `trip_id`, `user_id`, `role`, `joined_at`
-- `trip_cards`
+- `trip_items`
   - `id`, `trip_id`
   - 장소 메타데이터: `place_id`, `name`, `address`, `lat`, `lng`, `image_url`
   - 보드 상태: `list_type`, `day_index`, `order_index`
@@ -873,7 +873,7 @@ type PassportStampItem = {
 ```
 
 ### 왜 이렇게 나누는가
-- 보드의 진짜 소스 오브 트루스는 `trip_cards`다. 그래야 새로고침, 공유, 3D export가 모두 같은 데이터를 읽는다.
+- 보드의 진짜 소스 오브 트루스는 `trip_items`다. 그래야 새로고침, 공유, 3D export가 모두 같은 데이터를 읽는다.
 - presence/cursor/editing은 영속할 필요가 없으므로 DB에 저장하지 않는다. Supabase channel presence/broadcast로 끝내는 편이 맞다.
 - UI 상태를 DB에 섞지 않으면 optimistic update 롤백이 단순해진다.
 
@@ -922,7 +922,7 @@ type PassportStampItem = {
 - 전송 방식
   - Supabase table write + `postgres_changes`
 - 저장 위치
-  - `trip_cards`
+  - `trip_items`
 - 갱신 트리거
   - mutation 발생 시
 
@@ -991,14 +991,14 @@ type PassportStampItem = {
 7. 지도 마커/경로 연동
 8. Realtime presence
 9. Realtime cursor + editing presence
-10. `trip_cards` 구독 기반 실시간 동기화
+10. `trip_items` 구독 기반 실시간 동기화
 11. Passport render data builder
 12. Export Modal + 3D viewer
 13. PNG 다운로드
 14. Share 화면
 
 ### 이 순서를 권장하는 이유
-- `trip_cards` 저장 모델이 먼저 고정돼야 보드, 지도, export가 같은 데이터를 볼 수 있다.
+- `trip_items` 저장 모델이 먼저 고정돼야 보드, 지도, export가 같은 데이터를 볼 수 있다.
 - Realtime은 기본 편집이 끝난 뒤 붙여야 디버깅 범위를 줄일 수 있다.
 - 3D viewer는 데이터 모델이 안정된 뒤 구현해야 재작업이 적다.
 - Share 화면은 Export 결과를 재사용하므로 가장 마지막에 붙이는 편이 효율적이다.

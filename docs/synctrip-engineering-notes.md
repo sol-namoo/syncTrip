@@ -112,6 +112,14 @@
 
 ## 5. State Management
 
+### 5.1. Workspace Data Flow
+
+- Workspace는 full fetch를 반복하지 않는다.
+- 진입 시점에 `WorkspaceSnapshot`을 한 번 받고, 이후에는 Realtime 이벤트를 snapshot 위에 누적 반영한다.
+- `WorkspaceSnapshot`은 서버 초기 fetch 결과이자, 클라이언트 store hydrate 기준이다.
+- 이후 변경은 full replace가 아니라 patch update로 적용한다.
+- 따라서 Workspace 타입은 `초기 snapshot`과 `실시간 patch`를 구분해서 생각한다.
+
 ## 6. Realtime and WebSocket
 
 ## 7. Supabase Integration
@@ -149,6 +157,6 @@
 ## 8. Future Topics
 
 - optimistic update 허용 범위
-- `trip_cards` 설계 원칙
+- `trip_items` 설계 원칙
 - 서버 컴포넌트와 클라이언트 컴포넌트 분리 기준
 - 3D passport용 데이터 shape 기준

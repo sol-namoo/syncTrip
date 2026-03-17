@@ -36,7 +36,7 @@ This project also requires a Supabase-backed Postgres database. The MVP currentl
 
 - `trips`
 - `trip_members`
-- `trip_cards`
+- `trip_items`
 
 ## Run Locally
 
