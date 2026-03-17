@@ -69,6 +69,20 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["trips"]["Row"];
       };
+      get_my_trips_with_member_count: {
+        Args: Record<string, never>;
+        Returns: {
+          id: string;
+          title: string;
+          destination: string | null;
+          start_date: string;
+          end_date: string;
+          created_at: string;
+          updated_at: string;
+          role: string;
+          member_count: number;
+        }[];
+      };
       touch_trip_updated_at: {
         Args: {
           p_trip_id: string;
