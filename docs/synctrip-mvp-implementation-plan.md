@@ -487,6 +487,7 @@
 - 관련 파일/폴더
   - `src/features/workspace/components/invite-modal.tsx`
   - `src/features/workspace/lib/share.ts`
+  - `src/features/workspace/lib/access.ts`
 - 필요한 상태/타입
   - `InviteLinkPayload`, `WorkspaceRole`, `WorkspaceCapabilities`
 - Supabase 연동 필요 여부
