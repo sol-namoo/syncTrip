@@ -335,7 +335,7 @@
   - `src/features/workspace/components/workspace-screen.tsx`
   - `src/features/workspace/lib/queries.ts`
 - 필요한 상태/타입
-  - `WorkspacePageProps`, `WorkspaceSnapshot`
+  - `WorkspaceSnapshot`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건

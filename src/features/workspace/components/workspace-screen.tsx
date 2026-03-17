@@ -2,6 +2,8 @@
 
 import { Plane } from "lucide-react";
 import { ProfileMenu } from "@/features/auth/components/profile-menu";
+import { useHydrateWorkspaceStores } from "@/features/workspace/hooks/use-hydrate-workspace-stores";
+import { useWorkspaceBoardStore } from "@/store/workspace-board-store";
 import type { WorkspaceSnapshot } from "@/types/workspace";
 
 const DAY_COLORS = ["#3b82f6", "#f87171", "#22c55e", "#a855f7"];
@@ -19,7 +21,20 @@ export function WorkspaceScreen({
     avatarUrl?: string;
   } | null;
 }) {
-  const dayColumns = snapshot.columns.filter((column) => column.dayIndex !== null);
+  useHydrateWorkspaceStores(snapshot);
+
+  const trip = useWorkspaceBoardStore((state) => state.trip);
+  const columnOrder = useWorkspaceBoardStore((state) => state.columnOrder);
+  const columnsById = useWorkspaceBoardStore((state) => state.columnsById);
+  const cardsById = useWorkspaceBoardStore((state) => state.cardsById);
+
+  const boardTrip = trip ?? snapshot.trip;
+  const columns = columnOrder
+    .map((columnId) => columnsById[columnId])
+    .filter((column): column is NonNullable<typeof column> => Boolean(column));
+  const bucketColumn = columns.find((column) => column.id === "bucket") ?? snapshot.columns[0] ?? null;
+  const dayColumns = columns.filter((column) => column.dayIndex !== null);
+  const totalCards = Object.keys(cardsById).length || snapshot.cards.length;
 
   return (
     <main className="flex min-h-screen flex-col">
@@ -32,10 +47,10 @@ export function WorkspaceScreen({
             </div>
             <div className="hidden h-6 w-px bg-border md:block" />
             <div className="min-w-0">
-              <p className="truncate text-lg font-semibold">{snapshot.trip.title}</p>
+              <p className="truncate text-lg font-semibold">{boardTrip.title}</p>
             </div>
             <p className="hidden text-sm text-muted-foreground md:block">
-              {snapshot.trip.startDate} ~ {snapshot.trip.endDate}
+              {boardTrip.startDate} ~ {boardTrip.endDate}
             </p>
             <p className="hidden text-xs text-muted-foreground xl:block">
               Workspace #{tripId}
@@ -86,7 +101,7 @@ export function WorkspaceScreen({
             </div>
 
             <div className="border-t px-5 py-4 text-sm text-muted-foreground">
-              총 {snapshot.cards.length}개 장소 · 예상 이동 거리 12.5km
+              총 {totalCards}개 장소 · 예상 이동 거리 12.5km
             </div>
           </div>
         </section>
@@ -97,7 +112,7 @@ export function WorkspaceScreen({
               <div className="border-b px-5 py-4">
                 <div className="space-y-1">
                   <p className="text-2xl font-semibold">
-                    {snapshot.columns[0]?.title ?? "장소 바구니"}
+                    {bucketColumn?.title ?? "장소 바구니"}
                   </p>
                 </div>
                 <div className="mt-4 rounded-xl border px-4 py-3 text-sm text-muted-foreground">
@@ -107,7 +122,7 @@ export function WorkspaceScreen({
               <div className="flex flex-1 flex-col gap-4 p-4">
                 <div className="h-[220px] rounded-2xl border bg-muted/30" />
                 <p className="text-sm text-muted-foreground">
-                  {snapshot.columns[0]?.cardIds.length ?? 0}개 장소
+                  {bucketColumn?.cardIds.length ?? 0}개 장소
                 </p>
               </div>
               <div className="border-t p-4">

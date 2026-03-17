@@ -46,6 +46,27 @@ export type BoardColumn = {
   cardIds: string[];
 };
 
+export type BoardCardEntity = TripPlaceCard;
+
+export type BoardColumnEntity = BoardColumn;
+
+export type SaveIndicatorState = "idle" | "saving" | "saved" | "error";
+
+export type PresenceUserStatus = "online" | "away" | "offline" | "editing";
+
+export type PresenceUser = WorkspaceMember & {
+  status: PresenceUserStatus;
+};
+
+export type RemoteCursor = {
+  userId: string;
+  x: number;
+  y: number;
+  updatedAt: number;
+};
+
+export type EditingPresenceMap = Record<string, string>;
+
 export type WorkspaceSnapshot = {
   trip: WorkspaceTrip;
   members: WorkspaceMember[];
