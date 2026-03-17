@@ -5,7 +5,7 @@ export type TripMemberRow = Database["public"]["Tables"]["trip_members"]["Row"];
 
 export type TripPreview = Pick<
   TripRow,
-  "id" | "title" | "destination" | "start_date" | "end_date" | "created_at"
+  "id" | "title" | "destination" | "start_date" | "end_date" | "created_at" | "updated_at"
 >;
 
 export type TripMembershipResult = {
@@ -20,5 +20,8 @@ export type TripListItem = {
   startDate: string;
   endDate: string;
   createdAt: string;
+  updatedAt: string;
   role: TripMemberRow["role"];
 };
+
+export type TripsFilterTab = "owner" | "editor";

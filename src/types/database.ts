@@ -10,8 +10,9 @@ export type Database = {
           destination: string | null;
           start_date: string;
           end_date: string;
-          last_edited_by: string | null;
+          last_updated_by: string | null;
           created_at: string;
+          updated_at: string;
         };
         Insert: {
           id?: string;
@@ -19,8 +20,9 @@ export type Database = {
           destination?: string | null;
           start_date: string;
           end_date: string;
-          last_edited_by?: string | null;
+          last_updated_by?: string | null;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           id?: string;
@@ -28,8 +30,9 @@ export type Database = {
           destination?: string | null;
           start_date?: string;
           end_date?: string;
-          last_edited_by?: string | null;
+          last_updated_by?: string | null;
           created_at?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };
@@ -65,6 +68,12 @@ export type Database = {
           p_destination?: string | null;
         };
         Returns: Database["public"]["Tables"]["trips"]["Row"];
+      };
+      touch_trip_updated_at: {
+        Args: {
+          p_trip_id: string;
+        };
+        Returns: void;
       };
     };
     Enums: Record<string, never>;

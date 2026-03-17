@@ -85,6 +85,19 @@
 - 그래서 기본 UI는 headless 기반 shadcn/ui를 사용한다.
 - MVP 동안은 기본 UI를 과하게 커스텀하지 않는다.
 
+### 3.2. Primitive, cva, clsx, cn
+
+- `primitive`
+  - Button, Input, Tabs처럼 여러 화면에서 공통으로 쓰는 기초 UI 컴포넌트
+- `cva`
+  - variant와 size 같은 스타일 규칙을 정의하는 도구
+- `clsx`
+  - 조건부 className을 합치는 도구
+- `cn`
+  - 보통 `clsx`와 `tailwind-merge`를 감싼 프로젝트 유틸 함수
+  - `className={cn(...)}`
+  - 형태로 자주 쓴다
+
 ## 4. Data Fetching
 
 ### 4.1. React Query and Realtime
