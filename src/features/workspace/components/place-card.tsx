@@ -32,10 +32,12 @@ export function PlaceCard({
   card,
   dragHandleProps,
   isDragging = false,
+  cardRef,
 }: {
   card: TripPlaceCard;
   dragHandleProps?: DraggableProvidedDragHandleProps | null;
   isDragging?: boolean;
+  cardRef?: (element: HTMLDivElement | null) => void;
 }) {
   const selectedCardId = useWorkspaceUiStore((state) => state.selectedCardId);
   const setSelectedCardId = useWorkspaceUiStore((state) => state.setSelectedCardId);
@@ -44,6 +46,7 @@ export function PlaceCard({
 
   return (
     <div
+      ref={cardRef}
       {...dragHandleProps}
       onClick={() => setSelectedCardId(card.id)}
       className={cn(

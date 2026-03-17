@@ -503,6 +503,42 @@
 
 ### Epic 4. Place Search + Map Visualization
 
+#### Task 4-0. 지도 캔버스 라이브러리 통합
+- 목적
+  - Google Maps JavaScript API의 지도 캔버스를 React 컴포넌트로 안정적으로 렌더링할 기반을 먼저 만든다.
+- 작업 내용
+  - Google Maps React 라이브러리 선정
+    - 선정 기준
+      - Next.js App Router + client component 환경에서 안정적으로 동작할 것
+      - Places library, marker, polyline 같은 후속 기능과 자연스럽게 연결될 것
+      - React 상태와 지도 상태를 동기화하기 쉬울 것
+      - 라이선스/유지보수 리스크가 낮을 것
+    - 현재 우선 후보
+      - `@vis.gl/react-google-maps`
+      - `@react-google-maps/api`
+    - 현재 권장안
+      - `@vis.gl/react-google-maps`
+  - API key/env 연결
+  - 기본 지도 캔버스 렌더링
+  - 초기 center/zoom, 로딩/에러 fallback 정의
+  - Workspace 좌측 영역에 붙일 최소 map shell 구성
+- 관련 파일/폴더
+  - `src/features/map/components/map-canvas.tsx`
+  - `src/features/map/components/map-shell.tsx`
+  - `src/lib/maps/`
+- 필요한 상태/타입
+  - `MapViewport`, `MapProviderStatus`
+- Supabase 연동 필요 여부
+  - 아니오
+- 선행조건
+  - Google Maps 사용 결정
+- 난이도
+  - 중
+- 리스크
+  - React wrapper 선택이 늦어지면 이후 검색/마커/지도-보드 연동 코드가 흔들릴 수 있다.
+- 완료 조건
+  - Workspace에서 Google Maps 기반 지도 캔버스가 안정적으로 렌더링된다.
+
 #### Task 4-1. 장소 검색 adapter 계층 구현
 - 목적
   - Google Places 기반 검색 계층을 UI와 분리하고, 필요하면 mock으로 대체 가능하게 만든다.
@@ -518,7 +554,7 @@
 - Supabase 연동 필요 여부
   - 아니오
 - 선행조건
-  - Google Places 사용 결정
+  - Task 4-0
 - 난이도
   - 중
 - 리스크
@@ -544,7 +580,7 @@
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
-  - Task 4-1, Task 3-1
+  - Task 4-0, Task 4-1, Task 3-1
 - 난이도
   - 중
 - 리스크
@@ -573,7 +609,7 @@
 - Supabase 연동 필요 여부
   - 아니오
 - 선행조건
-  - 지도 provider 확정, Task 3-4
+  - Task 4-0, Task 3-4
 - 난이도
   - 상
 - 리스크
