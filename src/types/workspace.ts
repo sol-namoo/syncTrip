@@ -2,8 +2,9 @@ import type { Database } from "@/types/database";
 import type { TripMemberRole } from "@/types/trip";
 
 export type TripItemRow = Database["public"]["Tables"]["trip_items"]["Row"];
+export type TripDayRow = Database["public"]["Tables"]["trip_days"]["Row"];
 
-export type BoardColumnId = "bucket" | `day-${number}`;
+export type BoardColumnId = "bucket" | `day-${string}`;
 
 export type WorkspaceTrip = {
   id: string;
@@ -20,6 +21,18 @@ export type WorkspaceMember = {
   role: TripMemberRole;
 };
 
+export type WorkspaceRole = "demo" | "owner" | "editor";
+
+export type WorkspaceCapabilities = {
+  canPersist: boolean;
+  canInvite: boolean;
+  canExport: boolean;
+  canDeleteTrip: boolean;
+  // Trip title/date/destination and similar workspace-level settings.
+  canManageTrip: boolean;
+  canEditItems: boolean;
+};
+
 export type TripPlaceCard = {
   id: string;
   tripId: string;
@@ -31,7 +44,7 @@ export type TripPlaceCard = {
   imageUrl: string | null;
   note: string;
   listType: TripItemRow["list_type"];
-  dayIndex: number | null;
+  tripDayId: string | null;
   orderIndex: number;
   createdBy: string;
   createdAt: string;
@@ -41,8 +54,10 @@ export type TripPlaceCard = {
 export type BoardColumn = {
   id: BoardColumnId;
   title: string;
+  date: string | null;
   dateLabel: string | null;
-  dayIndex: number | null;
+  tripDayId: string | null;
+  position: number | null;
   cardIds: string[];
 };
 
@@ -66,6 +81,25 @@ export type RemoteCursor = {
 };
 
 export type EditingPresenceMap = Record<string, string>;
+
+export type MoveTripItemInput = {
+  tripId: string;
+  itemId: string;
+  destinationTripDayId: string | null;
+  sourceItemIds: string[];
+  destinationItemIds: string[];
+};
+
+export type WorkspaceActor = {
+  role: WorkspaceRole;
+  capabilities: WorkspaceCapabilities;
+  user: {
+    id?: string;
+    email?: string;
+    fullName?: string;
+    avatarUrl?: string;
+  } | null;
+};
 
 export type WorkspaceSnapshot = {
   trip: WorkspaceTrip;

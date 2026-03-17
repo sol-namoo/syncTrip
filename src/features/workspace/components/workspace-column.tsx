@@ -1,5 +1,6 @@
 "use client";
 
+import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { Plus, Search } from "lucide-react";
 import { PlaceCard } from "@/features/workspace/components/place-card";
 import type { BoardColumnEntity, BoardCardEntity } from "@/types/workspace";
@@ -7,9 +8,11 @@ import type { BoardColumnEntity, BoardCardEntity } from "@/types/workspace";
 export function WorkspaceColumn({
   column,
   cards,
+  registerCardElement,
 }: {
   column: BoardColumnEntity;
   cards: BoardCardEntity[];
+  registerCardElement: (cardId: string, element: HTMLDivElement | null) => void;
 }) {
   const isBucket = column.id === "bucket";
 
@@ -33,17 +36,50 @@ export function WorkspaceColumn({
         ) : null}
       </div>
 
-      <div className="flex-1 space-y-3 overflow-y-auto p-4">
-        {cards.map((card) => (
-          <PlaceCard key={card.id} card={card} />
-        ))}
+      <Droppable droppableId={column.id}>
+        {(provided, snapshot) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className="flex-1 overflow-y-auto p-4"
+          >
+            <div
+              className={
+                snapshot.isDraggingOver
+                  ? "min-h-full rounded-lg bg-blue-50/70 transition-colors"
+                  : "min-h-full transition-colors"
+              }
+            >
+              <div className="space-y-3">
+                {cards.map((card, index) => (
+                  <Draggable key={card.id} draggableId={card.id} index={index}>
+                    {(draggableProvided, draggableSnapshot) => (
+                      <div {...draggableProvided.draggableProps}>
+                        <PlaceCard
+                          card={card}
+                          dragHandleProps={draggableProvided.dragHandleProps}
+                          isDragging={draggableSnapshot.isDragging}
+                          cardRef={(element) => {
+                            draggableProvided.innerRef(element);
+                            registerCardElement(card.id, element);
+                          }}
+                        />
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+              </div>
+              {provided.placeholder}
 
-        {cards.length === 0 ? (
-          <div className="py-8 text-center text-sm text-gray-400">
-            {isBucket ? "장소를 검색해보세요" : "장소를 드래그해서 추가하세요"}
+              {cards.length === 0 ? (
+                <div className="py-8 text-center text-sm text-gray-400">
+                  {isBucket ? "장소를 검색해보세요" : "장소를 드래그해서 추가하세요"}
+                </div>
+              ) : null}
+            </div>
           </div>
-        ) : null}
-      </div>
+        )}
+      </Droppable>
 
       {isBucket ? (
         <div className="border-t border-gray-200 p-4">

@@ -58,7 +58,7 @@
 - Workspace 전체 본문
   - 지도 인터랙션
   - 검색창
-  - dnd-kit 보드
+  - `@hello-pangea/dnd` 기반 보드
   - 멀티 커서 오버레이
   - Realtime presence subscription
 - 3D Passport viewer
@@ -413,7 +413,7 @@
 - 완료 조건
   - 서버 snapshot만으로 보드가 렌더되고, 카드 구조가 확정된다.
 
-#### Task 3-5. dnd-kit 기반 카드 이동 구현
+#### Task 3-5. `@hello-pangea/dnd` 기반 카드 이동 구현
 - 목적
   - 바구니와 Day 컬럼 간 카드 이동, 같은 컬럼 내 재정렬을 구현한다.
 - 작업 내용
@@ -466,17 +466,30 @@
 
 #### Task 3-7. 초대 버튼과 링크 복사 플로우 구현
 - 목적
-  - 멤버 초대 UX를 MVP 범위 내에서 마무리한다.
+  - 멤버 초대 UX와 Workspace 권한 모델을 MVP 범위 내에서 마무리한다.
 - 작업 내용
   - 헤더 초대 버튼
   - 초대 모달
   - 링크 복사
   - 공유 권한 정책에 맞는 URL 생성
+  - Workspace 역할 정의
+    - `owner`
+    - `editor`
+    - 데모 화면 제약은 별도 임시 플래그가 아니라 최종 권한 모델에 포함해 정리
+    - 읽기 전용 공유 사용자는 `workspace`가 아니라 `share` 라우트에서 처리
+  - 역할별 capability 정의
+    - `canPersist`
+    - `canInvite`
+    - `canExport`
+    - `canDeleteTrip`
+    - `canManageTrip` (`trip` 엔티티 자체의 메타데이터/설정 수정)
+  - 헤더 CTA, DnD, 저장, 삭제 같은 주요 액션이 capability를 기준으로 열리고 잠기도록 설계
 - 관련 파일/폴더
   - `src/features/workspace/components/invite-modal.tsx`
   - `src/features/workspace/lib/share.ts`
+  - `src/features/workspace/lib/access.ts`
 - 필요한 상태/타입
-  - `InviteLinkPayload`
+  - `InviteLinkPayload`, `WorkspaceRole`, `WorkspaceCapabilities`
 - Supabase 연동 필요 여부
   - 정책에 따라 다름
 - 선행조건
@@ -489,6 +502,42 @@
   - 사용자가 Workspace에서 초대 링크를 복사할 수 있다.
 
 ### Epic 4. Place Search + Map Visualization
+
+#### Task 4-0. 지도 캔버스 라이브러리 통합
+- 목적
+  - Google Maps JavaScript API의 지도 캔버스를 React 컴포넌트로 안정적으로 렌더링할 기반을 먼저 만든다.
+- 작업 내용
+  - Google Maps React 라이브러리 선정
+    - 선정 기준
+      - Next.js App Router + client component 환경에서 안정적으로 동작할 것
+      - Places library, marker, polyline 같은 후속 기능과 자연스럽게 연결될 것
+      - React 상태와 지도 상태를 동기화하기 쉬울 것
+      - 라이선스/유지보수 리스크가 낮을 것
+    - 현재 우선 후보
+      - `@vis.gl/react-google-maps`
+      - `@react-google-maps/api`
+    - 현재 권장안
+      - `@vis.gl/react-google-maps`
+  - API key/env 연결
+  - 기본 지도 캔버스 렌더링
+  - 초기 center/zoom, 로딩/에러 fallback 정의
+  - Workspace 좌측 영역에 붙일 최소 map shell 구성
+- 관련 파일/폴더
+  - `src/features/map/components/map-canvas.tsx`
+  - `src/features/map/components/map-shell.tsx`
+  - `src/lib/maps/`
+- 필요한 상태/타입
+  - `MapViewport`, `MapProviderStatus`
+- Supabase 연동 필요 여부
+  - 아니오
+- 선행조건
+  - Google Maps 사용 결정
+- 난이도
+  - 중
+- 리스크
+  - React wrapper 선택이 늦어지면 이후 검색/마커/지도-보드 연동 코드가 흔들릴 수 있다.
+- 완료 조건
+  - Workspace에서 Google Maps 기반 지도 캔버스가 안정적으로 렌더링된다.
 
 #### Task 4-1. 장소 검색 adapter 계층 구현
 - 목적
@@ -505,7 +554,7 @@
 - Supabase 연동 필요 여부
   - 아니오
 - 선행조건
-  - Google Places 사용 결정
+  - Task 4-0
 - 난이도
   - 중
 - 리스크
@@ -531,7 +580,7 @@
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
-  - Task 4-1, Task 3-1
+  - Task 4-0, Task 4-1, Task 3-1
 - 난이도
   - 중
 - 리스크
@@ -560,7 +609,7 @@
 - Supabase 연동 필요 여부
   - 아니오
 - 선행조건
-  - 지도 provider 확정, Task 3-4
+  - Task 4-0, Task 3-4
 - 난이도
   - 상
 - 리스크
@@ -667,7 +716,7 @@
   - Task 5-1, Task 3-6
 - 난이도
   - 중
-- 리스크
+- 리스크 
   - 진짜 lock이 아니라 표시용 상태이므로 동시에 수정은 여전히 가능하다.
 - 완료 조건
   - 카드마다 현재 편집 중인 사용자가 표시되고, 충돌 가능성 배너가 노출된다.
