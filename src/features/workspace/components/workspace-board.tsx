@@ -6,16 +6,22 @@ import { WorkspaceColumn } from "@/features/workspace/components/workspace-colum
 import { toast } from "@/components/ui/toast";
 import { useWorkspaceBoardStore } from "@/store/workspace-board-store";
 import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
-import type { BoardCardEntity, BoardColumnEntity } from "@/types/workspace";
+import type {
+  BoardCardEntity,
+  BoardColumnEntity,
+  WorkspaceCapabilities,
+} from "@/types/workspace";
 
 export function WorkspaceBoard({
   columns,
   cardsById,
   tripId,
+  capabilities,
 }: {
   columns: BoardColumnEntity[];
   cardsById: Record<string, BoardCardEntity>;
   tripId: string;
+  capabilities: WorkspaceCapabilities;
 }) {
   const moveCard = useWorkspaceBoardStore((state) => state.moveCard);
   const replaceBoardState = useWorkspaceBoardStore((state) => state.replaceBoardState);
@@ -23,6 +29,11 @@ export function WorkspaceBoard({
   const setSaveState = useWorkspaceUiStore((state) => state.setSaveState);
 
   async function handleDragEnd(result: DropResult) {
+    if (!capabilities.canEditItems || !capabilities.canPersist) {
+      toast.error("현재 권한으로는 일정을 저장할 수 없습니다.");
+      return;
+    }
+
     const { source, destination } = result;
 
     if (!destination) {

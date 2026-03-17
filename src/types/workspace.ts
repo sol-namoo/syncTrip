@@ -21,6 +21,17 @@ export type WorkspaceMember = {
   role: TripMemberRole;
 };
 
+export type WorkspaceRole = "demo" | "owner" | "editor" | "viewer";
+
+export type WorkspaceCapabilities = {
+  canPersist: boolean;
+  canInvite: boolean;
+  canExport: boolean;
+  canDeleteTrip: boolean;
+  canManageTrip: boolean;
+  canEditItems: boolean;
+};
+
 export type TripPlaceCard = {
   id: string;
   tripId: string;
@@ -76,6 +87,17 @@ export type MoveTripItemInput = {
   destinationTripDayId: string | null;
   sourceItemIds: string[];
   destinationItemIds: string[];
+};
+
+export type WorkspaceActor = {
+  role: WorkspaceRole;
+  capabilities: WorkspaceCapabilities;
+  user: {
+    id?: string;
+    email?: string;
+    fullName?: string;
+    avatarUrl?: string;
+  } | null;
 };
 
 export type WorkspaceSnapshot = {

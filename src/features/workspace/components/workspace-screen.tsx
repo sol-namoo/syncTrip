@@ -4,22 +4,18 @@ import { WorkspaceBoard } from "@/features/workspace/components/workspace-board"
 import { WorkspaceHeader } from "@/features/workspace/components/workspace-header";
 import { useHydrateWorkspaceStores } from "@/features/workspace/hooks/use-hydrate-workspace-stores";
 import { useWorkspaceBoardStore } from "@/store/workspace-board-store";
-import type { WorkspaceSnapshot } from "@/types/workspace";
+import type { WorkspaceActor, WorkspaceSnapshot } from "@/types/workspace";
 
 const DAY_COLORS = ["#3b82f6", "#f87171", "#22c55e", "#a855f7"];
 
 export function WorkspaceScreen({
   snapshot,
   tripId,
-  user,
+  actor,
 }: {
   snapshot: WorkspaceSnapshot;
   tripId: string;
-  user: {
-    email?: string;
-    fullName?: string;
-    avatarUrl?: string;
-  } | null;
+  actor: WorkspaceActor;
 }) {
   useHydrateWorkspaceStores(snapshot);
 
@@ -37,7 +33,7 @@ export function WorkspaceScreen({
 
   return (
     <main className="flex min-h-screen flex-col xl:h-screen xl:overflow-hidden">
-      <WorkspaceHeader trip={boardTrip} tripId={tripId} user={user} />
+      <WorkspaceHeader trip={boardTrip} tripId={tripId} actor={actor} />
 
       <div className="grid flex-1 grid-cols-1 xl:min-h-0 xl:grid-cols-[1.05fr_1.75fr]">
         <section className="border-b border-gray-200 bg-white xl:border-b-0 xl:border-r">
@@ -78,6 +74,7 @@ export function WorkspaceScreen({
           columns={columns}
           cardsById={cardsById}
           tripId={tripId}
+          capabilities={actor.capabilities}
         />
       </div>
 
