@@ -16,7 +16,13 @@ export function WorkspaceColumn({
   const isBucket = column.id === "bucket";
 
   return (
-    <div className="flex h-full w-80 shrink-0 flex-col rounded-xl border border-gray-200 bg-white">
+    <div
+      className={
+        isBucket
+          ? "order-last flex h-full w-80 shrink-0 flex-col rounded-xl border border-gray-200 bg-white xl:order-none"
+          : "flex h-full w-80 shrink-0 flex-col rounded-xl border border-gray-200 bg-white"
+      }
+    >
       <div className="border-b border-gray-200 p-4">
         <div className="mb-2 flex items-center justify-between">
           <h3 className="font-bold text-gray-900">{column.title}</h3>
