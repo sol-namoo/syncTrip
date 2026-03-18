@@ -9,6 +9,7 @@ import {
   useMap,
 } from "@vis.gl/react-google-maps";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { MapRouteSegment } from "@/features/map/lib/build-route-segments";
 import { cn } from "@/lib/utils";
 
 type MapMarkerViewModel = {
@@ -68,11 +69,45 @@ function SelectedMarkerPanner({
   return null;
 }
 
+function MapPolylines({ segments }: { segments: MapRouteSegment[] }) {
+  const map = useMap();
+  const polylinesRef = useRef<google.maps.Polyline[]>([]);
+
+  useEffect(() => {
+    if (!map) {
+      return;
+    }
+
+    polylinesRef.current.forEach((polyline) => polyline.setMap(null));
+
+    polylinesRef.current = segments.map(
+      (segment) =>
+        new google.maps.Polyline({
+          path: segment.points,
+          strokeColor: segment.color,
+          strokeOpacity: 0.9,
+          strokeWeight: 3,
+          geodesic: true,
+          map,
+        })
+    );
+
+    return () => {
+      polylinesRef.current.forEach((polyline) => polyline.setMap(null));
+      polylinesRef.current = [];
+    };
+  }, [map, segments]);
+
+  return null;
+}
+
 export function MapCanvas({
   markers,
+  segments,
   onSelectMarker,
 }: {
   markers: MapMarkerViewModel[];
+  segments: MapRouteSegment[];
   onSelectMarker: (markerId: string) => void;
 }) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -117,6 +152,7 @@ export function MapCanvas({
         }}
       >
         <SelectedMarkerPanner marker={selectedMarker} />
+        <MapPolylines segments={segments} />
         {markers.map((marker) => (
           <AdvancedMarker
             key={marker.id}

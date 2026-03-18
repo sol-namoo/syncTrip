@@ -137,7 +137,6 @@ export function WorkspaceBoard({
               cards={column.cardIds
                 .map((cardId) => cardsById[cardId])
                 .filter((card): card is BoardCardEntity => Boolean(card))}
-              capabilities={capabilities}
               registerCardElement={(cardId, element) => {
                 cardElementsRef.current[cardId] = element;
               }}

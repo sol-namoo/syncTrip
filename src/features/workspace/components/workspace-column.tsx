@@ -1,23 +1,16 @@
 "use client";
 
 import { Draggable, Droppable } from "@hello-pangea/dnd";
-import { Plus } from "lucide-react";
 import { PlaceCard } from "@/features/workspace/components/place-card";
-import type {
-  BoardColumnEntity,
-  BoardCardEntity,
-  WorkspaceCapabilities,
-} from "@/types/workspace";
+import type { BoardColumnEntity, BoardCardEntity } from "@/types/workspace";
 
 export function WorkspaceColumn({
   column,
   cards,
-  capabilities,
   registerCardElement,
 }: {
   column: BoardColumnEntity;
   cards: BoardCardEntity[];
-  capabilities: WorkspaceCapabilities;
   registerCardElement: (cardId: string, element: HTMLDivElement | null) => void;
 }) {
   const isBucket = column.id === "bucket";
@@ -78,19 +71,6 @@ export function WorkspaceColumn({
           </div>
         )}
       </Droppable>
-
-      {isBucket ? (
-        <div className="border-t border-gray-200 p-4">
-          <button
-            type="button"
-            disabled={!capabilities.canEditItems || !capabilities.canPersist}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 py-2 text-gray-600 transition-colors hover:border-blue-400 hover:text-blue-600"
-          >
-            <Plus className="size-4" />
-            장소 추가
-          </button>
-        </div>
-      ) : null}
     </div>
   );
 }

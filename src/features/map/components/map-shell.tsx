@@ -1,14 +1,13 @@
 "use client";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { buildRouteSegments, getDayColor } from "@/features/map/lib/build-route-segments";
 import { PlaceSearchPanel } from "@/features/workspace/components/place-search-panel";
 import { Search } from "lucide-react";
 import { useMemo } from "react";
 import { MapCanvas } from "@/features/map/components/map-canvas";
 import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
 import type { BoardColumn, TripPlaceCard, WorkspaceCapabilities } from "@/types/workspace";
-
-const DAY_COLORS = ["#3b82f6", "#f87171", "#22c55e", "#a855f7"];
 
 function getMarkerColor(columns: BoardColumn[], card: TripPlaceCard) {
   if (!card.tripDayId) {
@@ -17,7 +16,7 @@ function getMarkerColor(columns: BoardColumn[], card: TripPlaceCard) {
 
   const dayIndex = columns.findIndex((column) => column.tripDayId === card.tripDayId);
 
-  return DAY_COLORS[(dayIndex >= 0 ? dayIndex : 0) % DAY_COLORS.length];
+  return getDayColor(dayIndex >= 0 ? dayIndex : 0);
 }
 
 export function MapShell({
@@ -35,6 +34,7 @@ export function MapShell({
   const setSelectedCardId = useWorkspaceUiStore((state) => state.setSelectedCardId);
 
   const dayColumns = columns.filter((column) => column.tripDayId !== null);
+  const segments = useMemo(() => buildRouteSegments(columns, cards), [columns, cards]);
   const markers = useMemo(
     () =>
       cards.map((card) => ({
@@ -59,7 +59,7 @@ export function MapShell({
                 <span key={column.id} className="inline-flex items-center gap-2">
                   <span
                     className="size-2.5 rounded-full"
-                    style={{ backgroundColor: DAY_COLORS[index % DAY_COLORS.length] }}
+                    style={{ backgroundColor: getDayColor(index) }}
                   />
                   {column.title}
                 </span>
@@ -69,7 +69,11 @@ export function MapShell({
         </div>
 
         <div className="relative min-h-[220px] flex-1 overflow-hidden bg-[#f8fafc] md:min-h-[260px] xl:min-h-0">
-          <MapCanvas markers={markers} onSelectMarker={setSelectedCardId} />
+          <MapCanvas
+            markers={markers}
+            segments={segments}
+            onSelectMarker={setSelectedCardId}
+          />
           <div className="absolute inset-x-0 top-4 z-10 flex justify-center px-4">
             <Dialog>
               <DialogTrigger asChild>

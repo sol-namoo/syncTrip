@@ -1,7 +1,8 @@
 "use client";
 
 import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
-import { MapPin, MoreVertical, Trash2 } from "lucide-react";
+import { MapPin, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
 import type { TripPlaceCard } from "@/types/workspace";
@@ -59,16 +60,40 @@ export function PlaceCard({
     >
       <div className="relative">
         <CardImage imageUrl={card.imageUrl} name={card.name} />
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-          }}
-          className="absolute right-2 top-2 rounded-full bg-white p-1.5 text-gray-400 shadow-sm transition-colors hover:text-gray-700"
-          aria-label={`${card.name} actions`}
-        >
-          <MoreVertical className="size-4" />
-        </button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+              }}
+              className="absolute right-2 top-2 rounded-full bg-white p-1.5 text-gray-400 shadow-sm transition-colors hover:text-gray-700"
+              aria-label={`${card.name} actions`}
+            >
+              <MoreVertical className="size-4" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="end"
+            className="w-40 space-y-1 p-1"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100"
+            >
+              <Pencil className="size-4" />
+              수정하기
+            </button>
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50"
+            >
+              <Trash2 className="size-4" />
+              삭제하기
+            </button>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div className="p-3">
@@ -80,12 +105,6 @@ export function PlaceCard({
 
         <div className="rounded px-2 py-1 text-xs text-gray-500 italic">
           {card.note || "메모 추가..."}
-        </div>
-
-        <div className="mt-2 flex justify-end">
-          <span className="rounded p-1.5 text-gray-400">
-            <Trash2 className="size-4" />
-          </span>
         </div>
       </div>
     </div>
