@@ -49,8 +49,8 @@ export function MapShell({
   );
 
   return (
-    <section className="min-h-[320px] border-b border-gray-200 bg-white md:min-h-[380px] xl:min-h-0 xl:border-b-0 xl:border-r">
-      <div className="flex h-full min-h-[320px] flex-col md:min-h-[380px] xl:min-h-0">
+    <section className="min-h-80 border-b border-gray-200 bg-white md:min-h-96 xl:min-h-0 xl:border-b-0 xl:border-r">
+      <div className="flex h-full min-h-80 flex-col md:min-h-96 xl:min-h-0">
         <div className="border-b border-gray-200 px-5 py-4">
           <div className="flex items-center justify-between gap-4">
             <h2 className="text-xl font-semibold text-gray-900">지도 뷰</h2>
@@ -68,7 +68,7 @@ export function MapShell({
           </div>
         </div>
 
-        <div className="relative min-h-[220px] flex-1 overflow-hidden bg-[#f8fafc] md:min-h-[260px] xl:min-h-0">
+        <div className="relative min-h-56 flex-1 overflow-hidden bg-[#f8fafc] md:min-h-64 xl:min-h-0">
           <MapCanvas
             markers={markers}
             segments={segments}

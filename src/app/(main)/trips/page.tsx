@@ -30,19 +30,19 @@ export default function TripsPage() {
       {/* Post-MVP: 여행 목록 탭 필터는 페이지네이션/검색/정렬 정책이 확정된 뒤 다시 활성화한다. */}
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {isLoading ? (
-          <div className="flex min-h-[360px] items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white text-center text-sm text-muted-foreground shadow-sm md:col-span-2 xl:col-span-3">
+          <div className="flex min-h-80 items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white text-center text-sm text-muted-foreground shadow-sm md:col-span-2 xl:col-span-3">
             <Spinner className="size-5" />
           </div>
         ) : null}
 
         {!isLoading && isError ? (
-          <div className="flex min-h-[360px] items-center justify-center rounded-xl border border-dashed border-destructive/40 bg-white text-center text-sm text-destructive shadow-sm md:col-span-2 xl:col-span-3">
+          <div className="flex min-h-80 items-center justify-center rounded-xl border border-dashed border-destructive/40 bg-white text-center text-sm text-destructive shadow-sm md:col-span-2 xl:col-span-3">
             여행 목록을 불러오지 못했습니다.
           </div>
         ) : null}
 
         {!isLoading && !isError && sortedTrips.length === 0 ? (
-          <div className="flex min-h-[360px] items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white text-center text-sm text-muted-foreground shadow-sm md:col-span-2 xl:col-span-3">
+          <div className="flex min-h-80 items-center justify-center rounded-xl border border-dashed border-gray-300 bg-white text-center text-sm text-muted-foreground shadow-sm md:col-span-2 xl:col-span-3">
             아직 생성되거나 초대된 여행이 없습니다.
           </div>
         ) : null}

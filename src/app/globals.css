@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --font-size: 16px;
+  --font-size: 14px;
   --surface: #ffffff;
   --surface-muted: #eef2f7;
   --line: #d8deea;

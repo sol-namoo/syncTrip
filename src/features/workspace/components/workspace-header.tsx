@@ -38,7 +38,7 @@ export function WorkspaceHeader({
 
   return (
     <section className="border-b border-gray-200 bg-white">
-      <div className="flex h-[72px] items-center justify-between gap-4 px-6">
+      <div className="flex h-18 items-center justify-between gap-4 px-6">
         <div className="flex min-w-0 items-center gap-6">
           <Link href="/trips" className="flex items-center gap-2">
             <Plane className="size-6 -rotate-12 text-blue-600" />
