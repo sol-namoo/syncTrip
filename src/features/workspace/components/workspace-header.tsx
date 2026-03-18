@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Plane } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ProfileMenu } from "@/features/auth/components/profile-menu";
@@ -39,10 +40,10 @@ export function WorkspaceHeader({
     <section className="border-b border-gray-200 bg-white">
       <div className="flex h-[72px] items-center justify-between gap-4 px-6">
         <div className="flex min-w-0 items-center gap-6">
-          <div className="flex items-center gap-2">
+          <Link href="/trips" className="flex items-center gap-2">
             <Plane className="size-6 -rotate-12 text-blue-600" />
             <span className="text-xl font-bold text-gray-900">SyncTrip</span>
-          </div>
+          </Link>
           <div className="hidden h-6 w-px bg-gray-300 md:block" />
           <p className="truncate text-xl font-semibold text-gray-900">{trip.title}</p>
           <span className="hidden text-sm text-gray-500 md:block">

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -157,6 +158,22 @@ export function LoginForm() {
           이메일 로그인 링크 보내기
         </Button>
       </form>
+
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+        <div className="mb-3 space-y-1 text-center">
+          <p className="text-sm font-semibold text-slate-900">로그인 전에 먼저 둘러볼래요?</p>
+          <p className="text-xs leading-5 text-slate-600">
+            데모 워크스페이스에서 지도와 칸반 편집 흐름을 바로 체험할 수 있어요.
+          </p>
+        </div>
+        <Button
+          asChild
+          size="lg"
+          className="h-11 w-full rounded-xl bg-slate-900 text-white hover:bg-slate-800"
+        >
+          <Link href="/workspace/demo">로그인 없이 체험해보기!</Link>
+        </Button>
+      </div>
     </div>
   );
 }

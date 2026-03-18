@@ -23,6 +23,10 @@ type WorkspaceBoardState = {
   upsertCard: (card: TripPlaceCard) => void;
   removeCard: (cardId: string) => void;
   setColumnCardIds: (columnId: BoardColumnId, cardIds: string[]) => void;
+  insertCardIntoColumn: (input: {
+    columnId: BoardColumnId;
+    card: TripPlaceCard;
+  }) => void;
   moveCard: (input: {
     sourceColumnId: BoardColumnId;
     destinationColumnId: BoardColumnId;
@@ -109,6 +113,29 @@ export const useWorkspaceBoardStore = create<WorkspaceBoardState>((set) => ({
           : undefined,
       },
     }));
+  },
+  insertCardIntoColumn: ({ columnId, card }) => {
+    set((state) => {
+      const existingColumn = state.columnsById[columnId];
+
+      if (!existingColumn) {
+        return state;
+      }
+
+      return {
+        cardsById: {
+          ...state.cardsById,
+          [card.id]: card,
+        },
+        columnsById: {
+          ...state.columnsById,
+          [columnId]: {
+            ...existingColumn,
+            cardIds: [...existingColumn.cardIds, card.id],
+          },
+        },
+      };
+    });
   },
   moveCard: ({ sourceColumnId, destinationColumnId, sourceIndex, destinationIndex }) => {
     set((state) => {
