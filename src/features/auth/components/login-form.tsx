@@ -87,7 +87,7 @@ export function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-md space-y-5">
+    <div className="w-full max-w-md space-y-5 rounded-2xl border-[1.5px] border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] p-6 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
       <div className="space-y-2 text-center">
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">로그인</h1>
         <p className="text-sm text-muted-foreground">
@@ -120,8 +120,9 @@ export function LoginForm() {
 
       <Button
         type="button"
+        variant="primary"
         size="lg"
-        className="h-11 w-full rounded-xl"
+        className="h-12 w-full rounded-xl text-sm font-bold"
         onClick={handleGoogleSignIn}
         disabled={googlePending || emailPending}
       >
@@ -151,7 +152,7 @@ export function LoginForm() {
           type="submit"
           variant="outline"
           size="lg"
-          className="h-11 w-full rounded-xl"
+          className="h-11 w-full rounded-xl border-[1.5px] border-[color:var(--color-border-card)] text-[color:var(--color-primary)]"
           disabled={emailPending || googlePending}
         >
           {emailPending ? <Loader2 className="animate-spin" /> : null}
@@ -159,18 +160,14 @@ export function LoginForm() {
         </Button>
       </form>
 
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+      <div className="rounded-2xl border border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] p-4 shadow-sm">
         <div className="mb-3 space-y-1 text-center">
-          <p className="text-sm font-semibold text-slate-900">로그인 전에 먼저 둘러볼래요?</p>
-          <p className="text-xs leading-5 text-slate-600">
+          <p className="text-sm font-semibold text-[color:var(--color-ink)]">로그인 전에 먼저 둘러볼래요?</p>
+          <p className="text-xs leading-5 text-[color:var(--color-ink-muted)]">
             데모 워크스페이스에서 지도와 칸반 편집 흐름을 바로 체험할 수 있어요.
           </p>
         </div>
-        <Button
-          asChild
-          size="lg"
-          className="h-11 w-full rounded-xl bg-slate-900 text-white hover:bg-slate-800"
-        >
+        <Button asChild variant="outline" size="lg" className="h-11 w-full rounded-xl border-[1.5px] border-[color:var(--color-border-card)] text-[color:var(--color-primary)]">
           <Link href="/workspace/demo">로그인 없이 체험해보기!</Link>
         </Button>
       </div>

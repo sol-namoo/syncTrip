@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { Plane } from "lucide-react";
+import { AvatarStack, type AvatarStackUser } from "@/components/ui/avatar-stack";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ProfileMenu } from "@/features/auth/components/profile-menu";
 import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
 import type { SaveIndicatorState } from "@/types/workspace";
@@ -29,47 +31,67 @@ export function WorkspaceHeader({
   trip,
   tripId,
   actor,
+  collaborators,
 }: {
   trip: WorkspaceTrip;
   tripId: string;
   actor: WorkspaceActor;
+  collaborators: AvatarStackUser[];
 }) {
   const saveState = useWorkspaceUiStore((state) => state.saveState);
 
   return (
-    <section className="border-b border-gray-200 bg-white">
+    <section className="border-b border-black/7 bg-white">
       <div className="flex h-18 items-center justify-between gap-4 px-6">
         <div className="flex min-w-0 items-center gap-6">
           <Link href="/trips" className="flex items-center gap-2">
-            <Plane className="size-6 -rotate-12 text-blue-600" />
-            <span className="text-xl font-bold text-gray-900">SyncTrip</span>
+            <Plane className="size-6 -rotate-12 text-[color:var(--color-primary)]" />
+            <span className="text-xl font-bold text-[color:var(--foreground)]">SyncTrip</span>
           </Link>
-          <div className="hidden h-6 w-px bg-gray-300 md:block" />
-          <p className="truncate text-xl font-semibold text-gray-900">{trip.title}</p>
-          <span className="hidden text-sm text-gray-500 md:block">
+          <div className="hidden h-6 w-px bg-[color:var(--line)] md:block" />
+          <p className="truncate text-xl font-semibold text-[color:var(--foreground)]">{trip.title}</p>
+          <span className="hidden text-sm text-[color:var(--muted-foreground)] md:block">
             {trip.startDate} ~ {trip.endDate}
           </span>
-          <span className="hidden text-xs text-gray-400 xl:block">Workspace #{tripId}</span>
+          <span className="hidden text-xs text-[color:var(--muted-foreground)]/80 xl:block">Workspace #{tripId}</span>
         </div>
 
         <div className="flex items-center gap-4">
           {saveState !== "idle" ? (
             <Badge tone={SAVE_STATE_TONE[saveState]}>{SAVE_STATE_LABEL[saveState]}</Badge>
           ) : null}
-          <button
+          {collaborators.length > 0 ? (
+            <>
+              <Badge
+                variant="online"
+                className="hidden gap-2 border-[0.5px] px-3 py-1 text-[11px] font-semibold md:inline-flex"
+                style={{
+                  background: "rgba(37,99,235,0.10)",
+                  borderColor: "rgba(37,99,235,0.20)",
+                }}
+              >
+                <span className="size-1.5 rounded-full bg-[color:var(--color-online)] animate-[pulse_2s_ease-in-out_infinite]" />
+                {collaborators.length}명 편집 중
+              </Badge>
+              <AvatarStack users={collaborators} size="sm" max={3} className="hidden md:flex" />
+            </>
+          ) : null}
+          <Button
             type="button"
+            variant="outline"
             disabled={!actor.capabilities.canExport}
-            className="hidden rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:from-blue-700 hover:to-purple-700 disabled:cursor-not-allowed disabled:opacity-45 md:block"
+            className="hidden rounded-full md:inline-flex"
           >
             3D 여권 발급받기
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="primary"
             disabled={!actor.capabilities.canInvite}
-            className="hidden rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-45 md:block"
+            className="hidden rounded-full md:inline-flex"
           >
             친구 초대
-          </button>
+          </Button>
           {actor.user ? (
             <ProfileMenu
               email={actor.user.email}

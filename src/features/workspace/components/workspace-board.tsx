@@ -127,7 +127,7 @@ export function WorkspaceBoard({
   }
 
   return (
-    <section className="min-w-0 overflow-hidden bg-gray-50">
+    <section className="relative min-w-0 overflow-hidden bg-[color:var(--color-bg-page)]">
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex h-full min-w-0 gap-4 overflow-x-auto p-6">
           {columns.map((column) => (

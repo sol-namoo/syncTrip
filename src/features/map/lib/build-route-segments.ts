@@ -1,6 +1,6 @@
 import type { BoardColumn, TripPlaceCard } from "@/types/workspace";
 
-const DAY_COLORS = ["#3b82f6", "#f87171", "#22c55e", "#a855f7"];
+const DAY_COLORS = ["#2563EB", "#0F766E", "#D97706"];
 
 export type MapRoutePoint = {
   lat: number;
