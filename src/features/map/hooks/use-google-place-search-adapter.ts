@@ -21,6 +21,35 @@ function getPhotoUrl(
   });
 }
 
+async function getPredictionDetails(
+  placesService: google.maps.places.PlacesService,
+  placeId: string
+) {
+  return new Promise<google.maps.places.PlaceResult | null>((resolve) => {
+    placesService.getDetails(
+      {
+        placeId,
+        fields: [
+          "place_id",
+          "name",
+          "formatted_address",
+          "rating",
+          "user_ratings_total",
+          "photos",
+        ],
+      },
+      (result, status) => {
+        if (status !== google.maps.places.PlacesServiceStatus.OK || !result) {
+          resolve(null);
+          return;
+        }
+
+        resolve(result);
+      }
+    );
+  });
+}
+
 export function useGooglePlaceSearchAdapter(): PlaceSearchAdapter {
   const placesLibrary = useMapsLibrary("places");
 
@@ -52,13 +81,35 @@ export function useGooglePlaceSearchAdapter(): PlaceSearchAdapter {
           types: ["establishment"],
         });
 
-        return (predictions.predictions ?? []).map((prediction) => ({
-          placeId: prediction.place_id,
-          title:
-            prediction.structured_formatting?.main_text ?? prediction.description,
-          subtitle:
-            prediction.structured_formatting?.secondary_text ?? prediction.description,
-        }));
+        const topPredictions = (predictions.predictions ?? []).slice(0, 16);
+        const detailedResults = await Promise.all(
+          topPredictions.map(async (prediction) => {
+            const detail = await getPredictionDetails(
+              placesService,
+              prediction.place_id
+            );
+
+            return {
+              placeId: prediction.place_id,
+              title:
+                detail?.name ??
+                prediction.structured_formatting?.main_text ??
+                prediction.description,
+              subtitle:
+                detail?.formatted_address ??
+                prediction.structured_formatting?.secondary_text ??
+                prediction.description,
+              imageUrl: getPhotoUrl(detail?.photos?.[0]),
+              rating: typeof detail?.rating === "number" ? detail.rating : null,
+              ratingCount:
+                typeof detail?.user_ratings_total === "number"
+                  ? detail.user_ratings_total
+                  : null,
+            };
+          })
+        );
+
+        return detailedResults;
       },
       async getPlaceDetails(placeId: string): Promise<PlaceDetailsResult> {
         const place = await new Promise<google.maps.places.PlaceResult>((resolve, reject) => {

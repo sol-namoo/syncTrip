@@ -29,12 +29,10 @@ const SAVE_STATE_TONE: Record<
 
 export function WorkspaceHeader({
   trip,
-  tripId,
   actor,
   collaborators,
 }: {
   trip: WorkspaceTrip;
-  tripId: string;
   actor: WorkspaceActor;
   collaborators: AvatarStackUser[];
 }) {
@@ -53,7 +51,6 @@ export function WorkspaceHeader({
           <span className="hidden text-sm text-[color:var(--muted-foreground)] md:block">
             {trip.startDate} ~ {trip.endDate}
           </span>
-          <span className="hidden text-xs text-[color:var(--muted-foreground)]/80 xl:block">Workspace #{tripId}</span>
         </div>
 
         <div className="flex items-center gap-4">

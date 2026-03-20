@@ -30,7 +30,15 @@ export function WorkspaceColumn({
     >
       <div className="bg-[color:var(--color-bg-page)]/80 p-4 pb-3">
         <div className="flex items-center justify-between">
-          <h3 className="font-bold text-[color:var(--color-ink)]">{column.title}</h3>
+          <div className="flex min-w-0 items-center gap-2">
+            {!isBucket ? (
+              <span
+                className="size-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: dayTokens.dot }}
+              />
+            ) : null}
+            <h3 className="truncate font-bold text-[color:var(--color-ink)]">{column.title}</h3>
+          </div>
           {column.dateLabel ? (
             <span
               className="rounded-full px-2.5 py-0.5 text-xs font-bold"

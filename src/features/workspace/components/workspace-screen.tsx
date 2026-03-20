@@ -47,7 +47,7 @@ export function WorkspaceScreen({
 
   return (
     <main className="flex min-h-screen flex-col bg-[color:var(--color-bg-page)] xl:h-screen xl:overflow-hidden">
-      <WorkspaceHeader trip={boardTrip} tripId={tripId} actor={actor} collaborators={collaborators} />
+      <WorkspaceHeader trip={boardTrip} actor={actor} collaborators={collaborators} />
 
       <div className="grid flex-1 grid-cols-1 xl:min-h-0 xl:grid-cols-[1.05fr_1.75fr]">
         <MapShell

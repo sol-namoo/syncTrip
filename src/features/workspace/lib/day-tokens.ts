@@ -8,6 +8,7 @@ const DAY_TOKEN_SET = [
   {
     accent: "var(--color-primary)",
     fg: "var(--color-primary-fg)",
+    dot: "#2563EB",
     wash: "var(--color-washi-green)",
     colBg: "var(--color-col-bg-day1)",
     buttonVariant: "day1" as ButtonVariant,
@@ -15,7 +16,8 @@ const DAY_TOKEN_SET = [
   },
   {
     accent: "var(--color-secondary)",
-    fg: "var(--peri-dark)",
+    fg: "var(--color-secondary-fg)",
+    dot: "#0F766E",
     wash: "var(--color-washi-blue)",
     colBg: "var(--color-col-bg-day2)",
     buttonVariant: "day2" as ButtonVariant,
@@ -23,7 +25,8 @@ const DAY_TOKEN_SET = [
   },
   {
     accent: "var(--color-tertiary)",
-    fg: "var(--marigold-dark)",
+    fg: "var(--color-tertiary-fg)",
+    dot: "#D97706",
     wash: "var(--color-washi-yellow)",
     colBg: "var(--color-col-bg-day3)",
     buttonVariant: "day3" as ButtonVariant,

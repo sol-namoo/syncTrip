@@ -1,8 +1,7 @@
 "use client";
 
 import { APIProvider } from "@vis.gl/react-google-maps";
-import dayjs from "dayjs";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, MapPin, Search, Star } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
@@ -20,12 +19,10 @@ function PlaceSearchPanelInner({
   tripId,
   dayColumns,
   capabilities,
-  modalLayout = false,
 }: {
   tripId: string;
   dayColumns: BoardColumnEntity[];
   capabilities: WorkspaceCapabilities;
-  modalLayout?: boolean;
 }) {
   const adapter = useGooglePlaceSearchAdapter();
   const mutation = useCreateTripItemMutation();
@@ -33,29 +30,18 @@ function PlaceSearchPanelInner({
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<PlaceSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedDayIdsByPlaceId, setSelectedDayIdsByPlaceId] = useState<
-    Record<string, string>
-  >(
-    {}
-  );
-  const defaultDayId = dayColumns[0]?.tripDayId ?? "";
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
 
   useEffect(() => {
-    setSelectedDayIdsByPlaceId((previous) => {
-      const nextEntries = results.map((result) => {
-        const previousValue = previous[result.placeId];
-        const nextValue =
-          previousValue &&
-          dayColumns.some((column) => column.tripDayId === previousValue)
-            ? previousValue
-            : defaultDayId;
+    if (results.length === 0) {
+      setSelectedPlaceId(null);
+      return;
+    }
 
-        return [result.placeId, nextValue] as const;
-      });
-
-      return Object.fromEntries(nextEntries);
-    });
-  }, [results, dayColumns, defaultDayId]);
+    if (!selectedPlaceId || !results.some((result) => result.placeId === selectedPlaceId)) {
+      setSelectedPlaceId(results[0]?.placeId ?? null);
+    }
+  }, [results, selectedPlaceId]);
 
   useEffect(() => {
     const normalized = query.trim();
@@ -121,35 +107,29 @@ function PlaceSearchPanelInner({
           ? `${details.name}을(를) 일정에 추가했습니다.`
           : `${details.name}을(를) 장소 바구니에 추가했습니다.`
       );
-      setQuery("");
-      setResults([]);
     } catch {
       toast.error("장소 추가에 실패했습니다.");
     }
   }
 
+  const selectedResult =
+    results.find((result) => result.placeId === selectedPlaceId) ?? null;
   return (
-    <div className={modalLayout ? "flex h-[62vh] flex-col" : "relative"}>
+    <div className="w-full rounded-[20px] border border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] p-3 shadow-[0_12px_24px_rgba(15,23,42,0.10)]">
       <div className="relative">
         <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[color:var(--color-ink-muted)]" />
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={adapter.isReady ? "장소 검색..." : "Places 로딩 중..."}
-          className="w-full rounded-xl border border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] py-2.5 pl-11 pr-3 text-sm text-[color:var(--color-ink)] outline-none transition-colors placeholder:text-[color:var(--color-ink-muted)] focus:border-[color:var(--color-primary)]"
+          className="w-full rounded-lg border border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] py-2.5 pl-11 pr-3 text-sm text-[color:var(--color-ink)] outline-none transition-colors placeholder:text-[color:var(--color-ink-muted)] focus:border-[color:var(--color-primary)]"
           disabled={!adapter.isReady}
         />
       </div>
 
-      <div
-        className={
-          modalLayout
-            ? "mt-4 flex-1 overflow-hidden rounded-xl border border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)]"
-            : "absolute left-0 right-0 top-[calc(100%+8px)] z-30 overflow-hidden rounded-xl border border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] shadow-xl"
-        }
-      >
-        {query.trim() ? (
-          isSearching ? (
+      {query.trim() ? (
+        <div className="mt-2 overflow-hidden rounded-lg border border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)]">
+          {isSearching ? (
             <div className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-[color:var(--color-ink-muted)]">
               <Loader2 className="size-4 animate-spin" />
               검색 중...
@@ -159,76 +139,94 @@ function PlaceSearchPanelInner({
               검색 결과가 없습니다.
             </div>
           ) : (
-            <div className={modalLayout ? "h-full overflow-y-auto" : "max-h-96 overflow-y-auto"}>
+            <div className="max-h-72 overflow-y-auto">
               {results.map((result) => (
-                <div
+                <button
                   key={result.placeId}
-                  className="border-b border-[color:var(--color-border-card)]/70 px-4 py-3 last:border-b-0"
+                  type="button"
+                  onClick={() => setSelectedPlaceId(result.placeId)}
+                  className={
+                    selectedPlaceId === result.placeId
+                      ? "flex w-full items-start gap-3 border-b border-[color:var(--color-border-card)]/70 bg-[color:var(--surface-muted)] px-3 py-3 text-left last:border-b-0"
+                      : "flex w-full items-start gap-3 border-b border-[color:var(--color-border-card)]/70 px-3 py-3 text-left transition-colors hover:bg-[color:var(--surface-muted)]/70 last:border-b-0"
+                  }
                 >
-                  <p className="font-medium text-[color:var(--color-ink)]">{result.title}</p>
-                  <p className="mt-1 text-xs text-[color:var(--color-ink-muted)]">{result.subtitle}</p>
-
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleInsert(result, null)}
-                      className="rounded-xl"
-                    >
-                      바구니에 추가
-                    </Button>
-                    <select
-                      value={selectedDayIdsByPlaceId[result.placeId] ?? defaultDayId}
-                      onChange={(event) =>
-                        setSelectedDayIdsByPlaceId((previous) => ({
-                          ...previous,
-                          [result.placeId]: event.target.value,
-                        }))
-                      }
-                      className="rounded-md border border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] px-2 py-1.5 text-xs text-[color:var(--color-ink)]"
-                    >
-                      {dayColumns.map((column) => (
-                        <option key={column.id} value={column.tripDayId ?? ""}>
-                          {column.title}
-                          {column.date ? ` (${dayjs(column.date).format("M/D")})` : ""}
-                        </option>
-                      ))}
-                    </select>
-                    {(() => {
-                      const selectedTripDayId =
-                        selectedDayIdsByPlaceId[result.placeId] ?? defaultDayId;
-                      const selectedColumn = dayColumns.find(
-                        (column) => column.tripDayId === selectedTripDayId
-                      );
-                      const buttonVariant = getDayTokens(selectedColumn?.position ?? 1).buttonVariant;
-
-                      return (
-                        <Button
-                          type="button"
-                          variant={buttonVariant}
-                          size="sm"
-                          onClick={() => {
-                            handleInsert(result, selectedTripDayId || null);
-                          }}
-                          disabled={!selectedTripDayId}
-                          className="rounded-xl"
-                        >
-                          Day에 추가
-                        </Button>
-                      );
-                    })()}
+                  <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-[color:var(--surface-muted)]">
+                    {result.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={result.imageUrl}
+                        alt={result.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#EFF6FF] to-[#DBEAFE] text-[color:var(--color-primary)]">
+                        <MapPin className="size-5" />
+                      </div>
+                    )}
                   </div>
-                </div>
+                  <div className="min-w-0 flex-1 self-center">
+                    <p className="font-medium text-[color:var(--color-ink)]">{result.title}</p>
+                    <p className="mt-1 text-xs text-[color:var(--color-ink-muted)]">{result.subtitle}</p>
+                    {result.rating ? (
+                      <div className="mt-1 flex items-center gap-1 text-xs text-[color:var(--color-ink-muted)]">
+                        <Star className="size-3.5 fill-[#F59E0B] text-[#F59E0B]" />
+                        <span className="font-medium text-[color:var(--color-ink)]">
+                          {result.rating.toFixed(1)}
+                        </span>
+                        {result.ratingCount ? (
+                          <span>({result.ratingCount.toLocaleString()})</span>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                </button>
               ))}
             </div>
-          )
-        ) : (
-          <div className="flex h-full items-center justify-center px-4 text-sm text-[color:var(--color-ink-muted)]">
-            검색어를 입력하면 장소 결과가 여기에 표시됩니다.
+          )}
+        </div>
+      ) : null}
+
+      {selectedResult ? (
+        <div className="mt-2 rounded-lg border border-[color:var(--color-border-card)] bg-[color:var(--surface-muted)] px-3 py-3">
+          <p className="text-sm font-medium text-[color:var(--color-ink)]">
+            선택한 장소를 다음 날짜에 추가
+          </p>
+          <p className="mt-1 text-xs text-[color:var(--color-ink-muted)]">
+            {selectedResult.title}
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => handleInsert(selectedResult, null)}
+              className="rounded-xl border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] text-[color:var(--color-ink)] hover:bg-[color:var(--surface-muted)]"
+            >
+              장소바구니
+            </Button>
+            {dayColumns.map((column) => {
+              const tokens = getDayTokens(column.position ?? 1);
+              return (
+                <Button
+                  key={column.id}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleInsert(selectedResult, column.tripDayId ?? null)}
+                  className="rounded-xl border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] text-[color:var(--color-ink)] hover:bg-[color:var(--surface-muted)]"
+                >
+                  <span
+                    className="size-2 rounded-full"
+                    style={{ backgroundColor: tokens.dot }}
+                  />
+                  {column.title}
+                </Button>
+              );
+            })}
           </div>
-        )}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -237,7 +235,6 @@ export function PlaceSearchPanel(props: {
   tripId: string;
   dayColumns: BoardColumnEntity[];
   capabilities: WorkspaceCapabilities;
-  modalLayout?: boolean;
 }) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 

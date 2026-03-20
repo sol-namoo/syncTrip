@@ -1,10 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { buildRouteSegments, getDayColor } from "@/features/map/lib/build-route-segments";
 import { PlaceSearchPanel } from "@/features/workspace/components/place-search-panel";
-import { Flower2, Search } from "lucide-react";
+import { Flower2 } from "lucide-react";
 import { useMemo } from "react";
 import { MapCanvas } from "@/features/map/components/map-canvas";
 import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
@@ -58,35 +56,12 @@ export function MapShell({
             segments={segments}
             onSelectMarker={setSelectedCardId}
           />
-          <div className="absolute inset-x-0 top-4 z-10 flex justify-center px-4">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="rounded-full border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] px-4 py-2 shadow-lg"
-                >
-                  <Search className="size-4" />
-                  장소 검색하기
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="flex max-h-[88vh] w-[min(96vw,96rem)] max-w-[min(96vw,96rem)] flex-col overflow-hidden p-0 gap-0">
-                <DialogHeader className="border-b border-[color:var(--line)] bg-[color:var(--surface)] px-6 py-5">
-                  <DialogTitle>장소 검색</DialogTitle>
-                  <DialogDescription>
-                    검색 결과를 장소 바구니에 담거나 원하는 Day에 바로 추가할 수 있습니다.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex-1 overflow-y-auto bg-[color:var(--surface)] px-6 py-5">
-                  <PlaceSearchPanel
-                    tripId={tripId}
-                    dayColumns={dayColumns}
-                    capabilities={capabilities}
-                    modalLayout
-                  />
-                </div>
-              </DialogContent>
-            </Dialog>
+          <div className="absolute left-4 top-4 z-10 w-[min(26rem,calc(100%-2rem))] max-w-full">
+            <PlaceSearchPanel
+              tripId={tripId}
+              dayColumns={dayColumns}
+              capabilities={capabilities}
+            />
           </div>
           {markers.length === 0 ? (
           <div className="pointer-events-none absolute inset-x-0 bottom-10 mx-auto flex max-w-sm flex-col items-center rounded-[24px] bg-[color:var(--color-bg-card)]/92 px-6 py-5 text-center shadow-sm backdrop-blur">
