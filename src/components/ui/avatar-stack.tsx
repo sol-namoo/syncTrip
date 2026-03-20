@@ -1,9 +1,6 @@
 import type { HTMLAttributes } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  type CollaborationColorToken,
-  getCollaborationColorValue,
-} from "@/lib/collaboration-colors"
+import type { CollaborationColorToken } from "@/lib/collaboration-colors"
 import { cn } from "@/lib/utils"
 
 const sizeClasses = {
@@ -55,6 +52,26 @@ function getStatusLabel(user: AvatarStackUser) {
   }
 }
 
+const avatarShells = [
+  { bg: "#DCFCE7", fg: "#166534" },
+  { bg: "#DBEAFE", fg: "#1D4ED8" },
+  { bg: "#FEF3C7", fg: "#B45309" },
+  { bg: "#F1F5F9", fg: "#475569" },
+  { bg: "#FEE2E2", fg: "#B91C1C" },
+  { bg: "#EDE9FE", fg: "#7C3AED" },
+  { bg: "#CFFAFE", fg: "#0F766E" },
+] as const
+
+const avatarPaletteByToken: Record<CollaborationColorToken, (typeof avatarShells)[number]> = {
+  emerald: avatarShells[0],
+  blue: avatarShells[1],
+  amber: avatarShells[2],
+  slate: avatarShells[3],
+  red: avatarShells[4],
+  violet: avatarShells[5],
+  cyan: avatarShells[6],
+}
+
 export function AvatarStack({
   className,
   users,
@@ -77,22 +94,29 @@ export function AvatarStack({
           >
             <div
               className={cn(
-                "rounded-full bg-background transition-[padding,opacity,filter,box-shadow] duration-200",
+                "rounded-full bg-white transition-[padding,opacity,filter,box-shadow] duration-200",
                 user.status === "editing" ? "p-[3px] shadow-sm" : "p-[2px]",
                 user.status === "away" && "opacity-60",
                 user.status === "offline" && "grayscale opacity-45",
               )}
-              style={{
-                backgroundColor:
-                  user.status === "offline"
-                    ? "var(--collab-slate)"
-                    : getCollaborationColorValue(user.color),
-              }}
+              style={{ backgroundColor: "white" }}
             >
-              <Avatar className={cn("border-white bg-card", sizeClasses[size])}>
+              {(() => {
+                const palette = user.color
+                  ? avatarPaletteByToken[user.color]
+                  : avatarShells[index % avatarShells.length]
+                return (
+              <Avatar className={cn("border-white bg-card shadow-sm", sizeClasses[size])}>
                 {user.src ? <AvatarImage src={user.src} alt={user.name} /> : null}
-                <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                <AvatarFallback
+                  className="font-semibold"
+                  style={{ backgroundColor: palette.bg, color: palette.fg }}
+                >
+                  {getInitials(user.name)}
+                </AvatarFallback>
               </Avatar>
+                )
+              })()}
             </div>
           </div>
         ))}
@@ -101,7 +125,7 @@ export function AvatarStack({
       {remainingCount > 0 ? (
         <div
           className={cn(
-            "-ml-3 inline-flex items-center justify-center rounded-full border border-background bg-foreground font-semibold text-background ring-2 ring-background",
+            "-ml-3 inline-flex items-center justify-center rounded-full border border-white bg-[color:var(--color-primary)] font-semibold text-[color:var(--color-primary-fg)] ring-2 ring-white",
             sizeClasses[size],
           )}
           style={{ zIndex: visibleUsers.length + 1 }}

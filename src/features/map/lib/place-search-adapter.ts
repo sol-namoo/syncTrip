@@ -4,6 +4,9 @@ export type PlaceSearchResult = {
   placeId: string;
   title: string;
   subtitle: string;
+  imageUrl: string | null;
+  rating: number | null;
+  ratingCount: number | null;
 };
 
 export type PlaceDetailsResult = {

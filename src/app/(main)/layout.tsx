@@ -16,11 +16,11 @@ export default async function MainLayout({ children }: { children: ReactNode }) 
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border/80 bg-white">
+    <div className="min-h-screen">
+      <header className="border-b border-black/7 bg-[color:var(--color-bg-page)]">
         <div className="mx-auto flex h-17 max-w-6xl items-center justify-between px-6 lg:px-10">
-          <Link href="/trips" className="flex items-center gap-2 text-2xl font-bold text-gray-900">
-            <Plane className="size-8 text-blue-600" />
+          <Link href="/trips" className="flex items-center gap-2 text-2xl font-bold text-[color:var(--color-ink)]">
+            <Plane className="size-8 text-[color:var(--color-primary)]" />
             <span>SyncTrip</span>
           </Link>
           <ProfileMenu
