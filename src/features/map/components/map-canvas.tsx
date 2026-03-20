@@ -8,6 +8,7 @@ import {
   type MapCameraChangedEvent,
   useMap,
 } from "@vis.gl/react-google-maps";
+import { Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { MapRouteSegment } from "@/features/map/lib/build-route-segments";
 import { cn } from "@/lib/utils";
@@ -85,9 +86,21 @@ function MapPolylines({ segments }: { segments: MapRouteSegment[] }) {
         new google.maps.Polyline({
           path: segment.points,
           strokeColor: segment.color,
-          strokeOpacity: 0.9,
-          strokeWeight: 3,
+          strokeOpacity: 0,
+          strokeWeight: 3.2,
           geodesic: true,
+          icons: [
+            {
+              icon: {
+                path: "M 0,-1 0,1",
+                strokeOpacity: 1,
+                strokeColor: segment.color,
+                scale: 3.2,
+              },
+              offset: "0",
+              repeat: "12px",
+            },
+          ],
           map,
         })
     );
@@ -99,6 +112,41 @@ function MapPolylines({ segments }: { segments: MapRouteSegment[] }) {
   }, [map, segments]);
 
   return null;
+}
+
+function MapZoomControls() {
+  const map = useMap("workspace-map");
+
+  if (!map) {
+    return null;
+  }
+
+  return (
+    <div className="absolute right-4 top-4 z-10 flex flex-col gap-2">
+      <button
+        type="button"
+        aria-label="Zoom in"
+        onClick={() => {
+          const currentZoom = map.getZoom() ?? 11;
+          map.setZoom(Math.min(currentZoom + 1, 20));
+        }}
+        className="inline-flex size-10 items-center justify-center rounded-xl border border-[color:var(--color-border-card)] bg-white text-[color:var(--color-ink)] shadow-sm transition-colors hover:bg-[color:var(--color-bg-page)]"
+      >
+        <Plus className="size-4" />
+      </button>
+      <button
+        type="button"
+        aria-label="Zoom out"
+        onClick={() => {
+          const currentZoom = map.getZoom() ?? 11;
+          map.setZoom(Math.max(currentZoom - 1, 3));
+        }}
+        className="inline-flex size-10 items-center justify-center rounded-xl border border-[color:var(--color-border-card)] bg-white text-[color:var(--color-ink)] shadow-sm transition-colors hover:bg-[color:var(--color-bg-page)]"
+      >
+        <Minus className="size-4" />
+      </button>
+    </div>
+  );
 }
 
 export function MapCanvas({
@@ -121,12 +169,12 @@ export function MapCanvas({
 
   if (!apiKey) {
     return (
-      <div className="flex h-full items-center justify-center bg-[linear-gradient(180deg,#eef4ff_0%,#f8fafc_100%)] px-6 text-center">
+      <div className="flex h-full items-center justify-center bg-[linear-gradient(180deg,#edf3e7_0%,#f6f0e6_100%)] px-6 text-center">
         <div>
-          <p className="text-base font-semibold text-gray-900">
+          <p className="text-base font-semibold text-[color:var(--foreground)]">
             Google Maps API key가 없습니다.
           </p>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-[color:var(--muted-foreground)]">
             <code>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>를 설정하면 지도 캔버스가
             표시됩니다.
           </p>
@@ -136,46 +184,50 @@ export function MapCanvas({
   }
 
   return (
-    <APIProvider apiKey={apiKey} libraries={["places"]}>
-      <Map
-        defaultCenter={defaultCenter}
-        defaultZoom={zoom}
-        mapId={mapId}
-        gestureHandling="greedy"
-        disableDefaultUI
-        mapTypeControl={false}
-        streetViewControl={false}
-        fullscreenControl={false}
-        className="h-full w-full"
-        onCameraChanged={(event: MapCameraChangedEvent) => {
-          setZoom(event.detail.zoom);
-        }}
-      >
-        <SelectedMarkerPanner marker={selectedMarker} />
-        <MapPolylines segments={segments} />
-        {markers.map((marker) => (
-          <AdvancedMarker
-            key={marker.id}
-            position={{ lat: marker.lat, lng: marker.lng }}
-            title={marker.name}
-            onClick={() => onSelectMarker(marker.id)}
-          >
-            <Pin
-              background={marker.color}
-              borderColor={marker.isSelected ? "#0f172a" : "#ffffff"}
-              glyphColor="#ffffff"
-              scale={marker.isSelected ? 1.25 : 1}
-            />
-          </AdvancedMarker>
-        ))}
-      </Map>
+    <div className="relative h-full w-full">
+      <APIProvider apiKey={apiKey} libraries={["places"]}>
+        <Map
+          id="workspace-map"
+          defaultCenter={defaultCenter}
+          defaultZoom={11}
+          mapId={mapId}
+          gestureHandling="greedy"
+          disableDefaultUI
+          mapTypeControl={false}
+          streetViewControl={false}
+          fullscreenControl={false}
+          className="h-full w-full"
+          onCameraChanged={(event: MapCameraChangedEvent) => {
+            setZoom(event.detail.zoom);
+          }}
+        >
+          <SelectedMarkerPanner marker={selectedMarker} />
+          <MapPolylines segments={segments} />
+          {markers.map((marker) => (
+            <AdvancedMarker
+              key={marker.id}
+              position={{ lat: marker.lat, lng: marker.lng }}
+              title={marker.name}
+              onClick={() => onSelectMarker(marker.id)}
+            >
+              <Pin
+                background={marker.color}
+                borderColor={marker.isSelected ? "#0f172a" : "#ffffff"}
+                glyphColor="#ffffff"
+                scale={marker.isSelected ? 1.3 : 1.02}
+              />
+            </AdvancedMarker>
+          ))}
+        </Map>
+        <MapZoomControls />
+      </APIProvider>
       <div
         className={cn(
-          "pointer-events-none absolute bottom-4 left-4 rounded-full bg-white/90 px-3 py-1.5 text-xs font-medium text-gray-600 shadow-sm backdrop-blur"
+          "pointer-events-none absolute bottom-4 left-4 rounded-full bg-white/92 px-3 py-1.5 text-xs font-medium text-[color:var(--muted-foreground)] shadow-sm backdrop-blur"
         )}
       >
         Zoom {zoom.toFixed(1)}
       </div>
-    </APIProvider>
+    </div>
   );
 }

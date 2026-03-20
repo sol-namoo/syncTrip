@@ -6,42 +6,86 @@
 
 :root {
   --font-size: 14px;
-  --surface: #ffffff;
-  --surface-muted: #eef2f7;
-  --line: #d8deea;
-  --line-strong: #b5bfd4;
-  --background: #f5f7fb;
-  --foreground: #101828;
-  --card: #ffffff;
-  --card-foreground: #101828;
-  --popover: #ffffff;
-  --popover-foreground: #101828;
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
-  --secondary: #eef2ff;
-  --secondary-foreground: #1e3a8a;
-  --muted: #eceff5;
-  --muted-foreground: #6b7280;
-  --accent: #eef4ff;
-  --accent-foreground: #101828;
-  --destructive: #d64545;
-  --destructive-foreground: #ffffff;
-  --border: rgba(15, 23, 42, 0.1);
+  --color-bg-page: #f7f9fc;
+  --color-bg-card: #ffffff;
+  --color-border-card: #e6ecf5;
+  --color-border-card-subtle: #eef3f8;
+  --color-border-card-hover: #2563eb40;
+  --color-col-bg: #ffffff;
+  --color-col-bg-day1: #ffffff;
+  --color-col-bg-day2: #ffffff;
+  --color-col-bg-day3: #ffffff;
+  --color-col-border: rgba(148, 163, 184, 0.22);
+  --color-primary: #2563eb;
+  --color-primary-fg: #ffffff;
+  --color-secondary: #1d4ed8;
+  --color-secondary-fg: #ffffff;
+  --color-tertiary: #0284c7;
+  --color-tertiary-fg: #ffffff;
+  --color-danger: #dc2626;
+  --color-danger-fg: #ffffff;
+  --color-ink: #0f172a;
+  --color-ink-muted: rgba(51, 65, 85, 0.78);
+  --color-online: #2563eb;
+  --color-shadow-card: rgba(15, 23, 42, 0.06);
+  --color-shadow-card-hover: rgba(37, 99, 235, 0.12);
+  --color-washi-green: rgba(37, 99, 235, 0.12);
+  --color-washi-blue: rgba(15, 118, 110, 0.12);
+  --color-washi-yellow: rgba(217, 119, 6, 0.12);
+  --linen: #f7f9fc;
+  --sage: #dbeafe;
+  --sage-dark: #2563eb;
+  --sage-ink: #1e40af;
+  --peri: #d1fae5;
+  --peri-dark: #0f766e;
+  --marigold: #ffedd5;
+  --marigold-dark: #d97706;
+  --terra: #fee2e2;
+  --terra-dark: #dc2626;
+  --ink: #0f172a;
+  --surface: var(--color-bg-page);
+  --surface-muted: #f1f5f9;
+  --line: var(--color-border-card);
+  --line-strong: #cbd5e1;
+  --background: var(--color-bg-page);
+  --foreground: var(--color-ink);
+  --card: var(--color-bg-card);
+  --card-foreground: var(--color-ink);
+  --popover: var(--color-bg-page);
+  --popover-foreground: var(--color-ink);
+  --primary: var(--color-primary);
+  --primary-foreground: var(--color-primary-fg);
+  --secondary: var(--color-secondary);
+  --secondary-foreground: var(--color-secondary-fg);
+  --muted: #f1f5f9;
+  --muted-foreground: var(--color-ink-muted);
+  --accent: var(--sage);
+  --accent-foreground: var(--color-ink);
+  --destructive: var(--color-danger);
+  --destructive-foreground: var(--color-danger-fg);
+  --border: var(--color-border-card);
   --input: transparent;
-  --input-background: #f3f6fb;
-  --switch-background: #cbd5e1;
-  --ring: rgba(37, 99, 235, 0.28);
+  --input-background: #ffffff;
+  --switch-background: #dbeafe;
+  --ring: color-mix(in srgb, var(--color-primary) 24%, transparent);
   --radius: 0.875rem;
-  --danger: #b9382f;
-  --success: #0f7b6c;
-  --warning: #b7791f;
-  --collab-emerald: #22c55e;
+  --danger: var(--terra-dark);
+  --success: var(--color-primary);
+  --warning: var(--color-tertiary);
+  --collab-emerald: #0f766e;
   --collab-blue: #2563eb;
-  --collab-amber: #f59e0b;
+  --collab-amber: #d97706;
   --collab-slate: #94a3b8;
-  --collab-red: #ef4444;
-  --collab-violet: #8b5cf6;
-  --collab-cyan: #06b6d4;
+  --collab-red: #dc2626;
+  --collab-violet: #7c3aed;
+  --collab-cyan: #0891b2;
+  --day-1: var(--sage);
+  --day-1-fg: var(--color-primary);
+  --day-2: var(--peri);
+  --day-2-fg: var(--peri-dark);
+  --day-3: var(--marigold);
+  --day-3-fg: var(--marigold-dark);
+  --blush: #e0e7ff;
 }
 
 .dark {
@@ -69,6 +113,16 @@
 
 @theme inline {
   --font-sans: var(--font-sans);
+  --color-page: var(--color-bg-page);
+  --color-card-surface: var(--color-bg-card);
+  --color-primary-token: var(--color-primary);
+  --color-secondary-token: var(--color-secondary);
+  --color-tertiary-token: var(--color-tertiary);
+  --color-danger-token: var(--color-danger);
+  --color-ink-token: var(--color-ink);
+  --color-sage: var(--sage);
+  --color-peri: var(--peri);
+  --color-marigold: var(--marigold);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -110,9 +164,7 @@
     @apply bg-background text-foreground;
     margin: 0;
     min-height: 100vh;
-    background:
-      radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 22%),
-      linear-gradient(180deg, #fbfdff 0%, var(--background) 24%, #f7f8fc 100%);
+    background-color: var(--color-bg-page);
     font-family:
       "Pretendard Variable",
       "Pretendard",

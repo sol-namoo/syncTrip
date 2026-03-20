@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { MapShell } from "@/features/map/components/map-shell";
 import { WorkspaceBoard } from "@/features/workspace/components/workspace-board";
 import { WorkspaceHeader } from "@/features/workspace/components/workspace-header";
@@ -28,10 +29,25 @@ export function WorkspaceScreen({
     .map((columnId) => columnsById[columnId])
     .filter((column): column is NonNullable<typeof column> => Boolean(column));
   const cards = Object.values(cardsById).length > 0 ? Object.values(cardsById) : snapshot.cards;
+  const collaborators = useMemo(
+    () =>
+      snapshot.members.map((member, index) => {
+        const isCurrentUser = member.userId === actor.user?.id;
+        return {
+          id: member.userId,
+          name: isCurrentUser
+            ? actor.user?.fullName ?? actor.user?.email ?? "ME"
+            : `E${index + 1}`,
+          src: isCurrentUser ? actor.user?.avatarUrl ?? undefined : undefined,
+          status: "editing" as const,
+        };
+      }),
+    [actor.user, snapshot.members]
+  );
 
   return (
-    <main className="flex min-h-screen flex-col xl:h-screen xl:overflow-hidden">
-      <WorkspaceHeader trip={boardTrip} tripId={tripId} actor={actor} />
+    <main className="flex min-h-screen flex-col bg-[color:var(--color-bg-page)] xl:h-screen xl:overflow-hidden">
+      <WorkspaceHeader trip={boardTrip} actor={actor} collaborators={collaborators} />
 
       <div className="grid flex-1 grid-cols-1 xl:min-h-0 xl:grid-cols-[1.05fr_1.75fr]">
         <MapShell
@@ -48,7 +64,7 @@ export function WorkspaceScreen({
         />
       </div>
 
-      <button className="fixed bottom-5 right-5 inline-flex size-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm">
+      <button className="fixed bottom-5 right-5 inline-flex size-10 items-center justify-center rounded-full border border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] text-[color:var(--color-ink-muted)] shadow-sm">
         ?
       </button>
     </main>

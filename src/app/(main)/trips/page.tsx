@@ -7,12 +7,6 @@ import { useTripsQuery } from "@/features/trips/hooks";
 import { Spinner } from "@/components/ui/spinner";
 import { CreateTripDialog } from "@/features/trips/components/create-trip-dialog";
 
-const CARD_BACKGROUNDS = [
-  "linear-gradient(135deg, rgba(246,177,122,0.65), rgba(104,161,255,0.35))",
-  "linear-gradient(135deg, rgba(178,163,126,0.65), rgba(63,94,164,0.32))",
-  "linear-gradient(135deg, rgba(147,197,253,0.6), rgba(191,219,254,0.34))",
-];
-
 export default function TripsPage() {
   const { data: trips = [], isLoading, isError } = useTripsQuery();
   const sortedTrips = useMemo(() => trips, [trips]);
@@ -48,19 +42,22 @@ export default function TripsPage() {
         ) : null}
 
         {!isLoading && !isError
-          ? sortedTrips.map((trip, index) => (
+          ? sortedTrips.map((trip) => (
               <Link
                 key={trip.id}
                 href={`/workspace/${trip.id}`}
-                className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+                className="overflow-hidden rounded-2xl border-[1.5px] border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] shadow-[0_1px_4px_rgba(74,122,106,0.06)] transition-all hover:-translate-y-0.5 hover:shadow-[0_4px_14px_rgba(74,122,106,0.14)]"
               >
-                <div
-                  className="h-48 w-full"
-                  style={{ background: CARD_BACKGROUNDS[index % CARD_BACKGROUNDS.length] }}
-                />
+                <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-[#EFF6FF] to-[#DBEAFE]">
+                  <span
+                    className="absolute bottom-3 left-3 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-semibold text-[color:var(--color-primary)] shadow-sm"
+                  >
+                    {trip.destination || "목적지 미정"}
+                  </span>
+                </div>
                 <div className="p-6">
-                  <h2 className="mb-2 text-xl font-bold text-gray-900">{trip.title}</h2>
-                  <div className="space-y-2 text-sm text-gray-600">
+                  <h2 className="mb-2 text-xl font-bold text-[color:var(--color-ink)]">{trip.title}</h2>
+                  <div className="space-y-2 text-sm text-[color:var(--color-ink-muted)]">
                     <div className="flex items-center gap-2">
                       <MapPin className="size-4" />
                       <span>{trip.destination ?? "목적지 미정"}</span>
