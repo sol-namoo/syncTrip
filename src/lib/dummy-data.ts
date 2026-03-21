@@ -34,7 +34,7 @@ export const DUMMY_COLUMNS: Record<BoardColumnId, BoardColumnEntity> = {
   },
   [`day-${DEMO_DAY_1_ID}`]: {
     id: `day-${DEMO_DAY_1_ID}`,
-    title: "Day 1: 단종의 발자취를 따라서",
+    title: "단종의 발자취를 따라서",
     date: "2026-04-12",
     dateLabel: "4/12",
     tripDayId: DEMO_DAY_1_ID,
@@ -43,7 +43,7 @@ export const DUMMY_COLUMNS: Record<BoardColumnId, BoardColumnEntity> = {
   },
   [`day-${DEMO_DAY_2_ID}`]: {
     id: `day-${DEMO_DAY_2_ID}`,
-    title: "Day 2: 영월의 대자연과 별빛",
+    title: "영월의 대자연과 별빛",
     date: "2026-04-13",
     dateLabel: "4/13",
     tripDayId: DEMO_DAY_2_ID,

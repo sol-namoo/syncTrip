@@ -6,8 +6,8 @@ type ButtonVariant = NonNullable<VariantProps<typeof buttonVariants>["variant"]>
 
 const DAY_TOKEN_SET = [
   {
-    accent: "var(--color-primary)",
-    fg: "var(--color-primary-fg)",
+    accent: "#2563EB",
+    fg: "#FFFFFF",
     dot: "#2563EB",
     wash: "var(--color-washi-green)",
     colBg: "var(--color-col-bg-day1)",
@@ -15,8 +15,8 @@ const DAY_TOKEN_SET = [
     badgeVariant: "sage" as BadgeVariant,
   },
   {
-    accent: "var(--color-secondary)",
-    fg: "var(--color-secondary-fg)",
+    accent: "#0F766E",
+    fg: "#FFFFFF",
     dot: "#0F766E",
     wash: "var(--color-washi-blue)",
     colBg: "var(--color-col-bg-day2)",
@@ -24,8 +24,8 @@ const DAY_TOKEN_SET = [
     badgeVariant: "periwinkle" as BadgeVariant,
   },
   {
-    accent: "var(--color-tertiary)",
-    fg: "var(--color-tertiary-fg)",
+    accent: "#D97706",
+    fg: "#FFFFFF",
     dot: "#D97706",
     wash: "var(--color-washi-yellow)",
     colBg: "var(--color-col-bg-day3)",

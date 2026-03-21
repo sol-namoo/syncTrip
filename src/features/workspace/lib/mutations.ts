@@ -104,3 +104,20 @@ export async function deleteTripItem(input: { itemId: string }): Promise<void> {
     throw new Error(error.message);
   }
 }
+
+export async function updateTripDayTitle(input: {
+  dayId: string;
+  title: string | null;
+}): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("trip_days")
+    .update({
+      title: input.title,
+    })
+    .eq("id", input.dayId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}

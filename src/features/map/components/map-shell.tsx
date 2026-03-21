@@ -80,7 +80,7 @@ export function MapShell({
         </div>
 
         <div className="border-t border-line-token px-5 py-4 text-sm text-muted-foreground">
-          총 {cards.length}개 장소 · 선택된 장소 {selectedCardId ? 1 : 0}개
+          총 {cards.length}개 장소
         </div>
       </div>
     </section>

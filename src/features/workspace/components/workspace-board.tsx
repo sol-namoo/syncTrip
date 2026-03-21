@@ -261,6 +261,7 @@ export function WorkspaceBoard({
               cardLocksById={cardLocksById}
               currentUserId={currentUserId}
               canEditItems={capabilities.canEditItems}
+              canRenameDay={capabilities.canEditItems && capabilities.canPersist}
               onBroadcastEditingState={onBroadcastEditingState}
               registerCardElement={(cardId, element) => {
                 cardElementsRef.current[cardId] = element;

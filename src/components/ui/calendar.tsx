@@ -18,28 +18,28 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       classNames={{
-        months: "flex flex-col gap-2 sm:flex-row",
-        month: "flex flex-col gap-4",
-        caption: "relative flex w-full items-center justify-center pt-1",
+        months: "flex flex-col gap-4",
+        month: "space-y-4",
+        caption: "relative flex items-center justify-center pt-1",
         caption_label: "text-sm font-medium",
-        nav: "flex items-center gap-1",
+        nav: "absolute inset-x-0 top-1 flex items-center justify-between",
         nav_button: cn(
           buttonVariants({ variant: "outline", size: "icon" }),
           "size-7 bg-transparent p-0 opacity-50 hover:opacity-100"
         ),
-        nav_button_previous: "absolute left-1",
-        nav_button_next: "absolute right-1",
-        table: "w-full border-collapse space-x-1",
-        head_row: "flex",
-        head_cell: "text-muted-foreground w-8 rounded-md text-[0.8rem] font-normal",
-        row: "mt-2 flex w-full",
+        nav_button_previous: "static",
+        nav_button_next: "static",
+        table: "w-full border-collapse",
+        head_row: "grid grid-cols-7",
+        head_cell: "text-muted-foreground h-8 rounded-md text-center text-[0.8rem] font-normal",
+        row: "mt-2 grid grid-cols-7",
         cell: cn(
           "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent",
           props.mode === "range"
             ? "[&:has(>.day-range-end)]:rounded-r-md [&:has(>.day-range-start)]:rounded-l-md first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md"
             : "[&:has([aria-selected])]:rounded-md"
         ),
-        day: cn(buttonVariants({ variant: "ghost", size: "icon" }), "size-8 p-0 font-normal aria-selected:opacity-100"),
+        day: cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-8 w-8 justify-self-center p-0 font-normal aria-selected:opacity-100"),
         day_range_start: "day-range-start",
         day_range_end: "day-range-end",
         day_selected:
