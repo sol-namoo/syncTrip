@@ -1,8 +1,8 @@
 "use client";
 
 import { APIProvider } from "@vis.gl/react-google-maps";
-import { Loader2, MapPin, Search, Star } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Loader2, MapPin, Search, Star, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { useGooglePlaceSearchAdapter } from "@/features/map/hooks/use-google-place-search-adapter";
@@ -31,6 +31,8 @@ function PlaceSearchPanelInner({
   const [results, setResults] = useState<PlaceSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (results.length === 0) {
@@ -49,6 +51,7 @@ function PlaceSearchPanelInner({
     if (!normalized) {
       setResults([]);
       setIsSearching(false);
+      setIsPanelOpen(false);
       return;
     }
 
@@ -61,6 +64,7 @@ function PlaceSearchPanelInner({
         setIsSearching(true);
         const nextResults = await adapter.searchPlaces(normalized);
         setResults(nextResults);
+        setIsPanelOpen(true);
       } catch {
         setResults([]);
         toast.error("장소 검색에 실패했습니다.");
@@ -71,6 +75,21 @@ function PlaceSearchPanelInner({
 
     return () => window.clearTimeout(timer);
   }, [adapter, query]);
+
+  useEffect(() => {
+    if (!isPanelOpen) {
+      return;
+    }
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!panelRef.current?.contains(event.target as Node)) {
+        setIsPanelOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [isPanelOpen]);
 
   async function handleInsert(
     result: PlaceSearchResult,
@@ -115,19 +134,42 @@ function PlaceSearchPanelInner({
   const selectedResult =
     results.find((result) => result.placeId === selectedPlaceId) ?? null;
   return (
-    <div className="w-full rounded-[20px] border border-border-card-token bg-card-surface p-3 shadow-[0_12px_24px_rgba(15,23,42,0.10)]">
+    <div
+      ref={panelRef}
+      className="w-full rounded-[20px] border border-border-card-token bg-card-surface p-3 shadow-[0_12px_24px_rgba(15,23,42,0.10)]"
+    >
       <div className="relative">
         <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[color:var(--color-ink-muted)]" />
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
+          onFocus={() => {
+            if (query.trim()) {
+              setIsPanelOpen(true);
+            }
+          }}
           placeholder={adapter.isReady ? "장소 검색..." : "Places 로딩 중..."}
-          className="w-full rounded-lg border border-border-card-token bg-card-surface py-2.5 pl-11 pr-3 text-sm text-[color:var(--color-ink)] outline-none transition-colors placeholder:text-[color:var(--color-ink-muted)]"
+          className="w-full rounded-lg border border-border-card-token bg-card-surface py-2.5 pl-11 pr-10 text-sm text-[color:var(--color-ink)] outline-none transition-colors placeholder:text-[color:var(--color-ink-muted)]"
           disabled={!adapter.isReady}
         />
+        {query ? (
+          <button
+            type="button"
+            onClick={() => {
+              setQuery("");
+              setResults([]);
+              setSelectedPlaceId(null);
+              setIsPanelOpen(false);
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-1 text-[color:var(--color-ink-muted)] transition-colors hover:bg-surface-muted-token hover:text-[color:var(--color-ink)]"
+            aria-label="검색어 지우기"
+          >
+            <X className="size-4" />
+          </button>
+        ) : null}
       </div>
 
-      {query.trim() ? (
+      {query.trim() && isPanelOpen ? (
         <div className="mt-2 overflow-hidden rounded-lg border border-border-card-token bg-card-surface">
           {isSearching ? (
             <div className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-[color:var(--color-ink-muted)]">
@@ -187,7 +229,7 @@ function PlaceSearchPanelInner({
         </div>
       ) : null}
 
-      {selectedResult ? (
+      {selectedResult && isPanelOpen ? (
         <div className="mt-2 rounded-lg border border-border-card-token bg-surface-muted-token px-3 py-3">
           <p className="text-sm font-medium text-[color:var(--color-ink)]">
             선택한 장소를 다음 날짜에 추가
@@ -214,13 +256,13 @@ function PlaceSearchPanelInner({
                   variant="outline"
                   size="sm"
                   onClick={() => handleInsert(selectedResult, column.tripDayId ?? null)}
-                  className="rounded-xl border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] text-[color:var(--color-ink)] hover:bg-[color:var(--surface-muted)]"
+                  className="cursor-pointer rounded-xl border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] text-[color:var(--color-ink)] hover:bg-[color:var(--surface-muted)]"
                 >
                   <span
                     className="size-2 rounded-full"
                     style={{ backgroundColor: tokens.dot }}
                   />
-                  {column.title}
+                  {`Day ${column.position ?? 1}`}
                 </Button>
               );
             })}

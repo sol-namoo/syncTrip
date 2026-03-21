@@ -63,7 +63,7 @@ function buildBoardColumns(days: TripDaySelect[], cards: TripPlaceCard[]): Board
   for (const day of days) {
     columns.push({
       id: `day-${day.id}`,
-      title: day.title ?? `Day ${day.position}`,
+      title: day.title ?? "",
       date: day.date,
       dateLabel: dayjs(day.date).format("M/D"),
       tripDayId: day.id,

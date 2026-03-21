@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -38,14 +38,9 @@ export function useWorkspacePresence({
   } | null;
   currentRole: WorkspaceRole;
 }) {
-  const setUsers = useWorkspacePresenceStore((state) => state.setUsers);
   const initializeFromMembers = useWorkspacePresenceStore(
     (state) => state.initializeFromMembers
   );
-  const setActiveTarget = useWorkspacePresenceStore((state) => state.setActiveTarget);
-  const setDraggingState = useWorkspacePresenceStore((state) => state.setDraggingState);
-  const setEditingUser = useWorkspacePresenceStore((state) => state.setEditingUser);
-  const clearEditingUser = useWorkspacePresenceStore((state) => state.clearEditingUser);
   const currentUserId = currentUser?.id;
   const currentUserEmail = currentUser?.email;
   const currentUserFullName = currentUser?.fullName;
@@ -53,6 +48,7 @@ export function useWorkspacePresence({
   const selectedCardId = useWorkspaceUiStore((state) => state.selectedCardId);
   const selectedColumnId = useWorkspaceUiStore((state) => state.selectedColumnId);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const membersRef = useRef(members);
   const [isSubscribed, setIsSubscribed] = useState(false);
 
   const currentTarget = useMemo(() => {
@@ -68,8 +64,11 @@ export function useWorkspacePresence({
   }, [selectedCardId, selectedColumnId]);
 
   useEffect(() => {
+    membersRef.current = members;
     initializeFromMembers(members);
+  }, [initializeFromMembers, members]);
 
+  useEffect(() => {
     if (!currentUserId) {
       return;
     }
@@ -104,8 +103,14 @@ export function useWorkspacePresence({
         }
 
         const state = nextChannel.presenceState<WorkspacePresenceMeta>();
-        const nextUsers = buildPresenceUsersFromState(state, members);
-        setUsers(nextUsers);
+        const nextUsers = buildPresenceUsersFromState(state, membersRef.current);
+        const store = useWorkspacePresenceStore.getState();
+        store.setUsers(nextUsers);
+        store.pruneCardLocksToUsers(
+          nextUsers
+            .filter((user) => user.status !== "offline")
+            .map((user) => user.userId)
+        );
       });
 
       nextChannel
@@ -115,7 +120,10 @@ export function useWorkspacePresence({
             return;
           }
 
-          setActiveTarget(message.userId, message.target);
+          useWorkspacePresenceStore.getState().setActiveTarget(
+            message.userId,
+            message.target
+          );
         })
         .on("broadcast", { event: "drag" }, ({ payload }) => {
           const message = payload as WorkspaceDragBroadcastPayload;
@@ -123,11 +131,14 @@ export function useWorkspacePresence({
             return;
           }
 
-          setDraggingState(
-            message.userId,
+          useWorkspacePresenceStore.getState().setCardLock(
+            message.itemId,
             message.state === "end"
               ? null
-              : { itemId: message.itemId, columnId: message.columnId }
+              : {
+                  userId: message.userId,
+                  kind: "dragging",
+                }
           );
         })
         .on("broadcast", { event: "editing" }, ({ payload }) => {
@@ -136,12 +147,15 @@ export function useWorkspacePresence({
             return;
           }
 
-          if (message.state === "start") {
-            setEditingUser(message.cardId, message.userId);
-            return;
-          }
-
-          clearEditingUser(message.userId);
+          useWorkspacePresenceStore.getState().setCardLock(
+            message.cardId,
+            message.state === "end"
+              ? null
+              : {
+                  userId: message.userId,
+                  kind: "editing",
+                }
+          );
         });
 
       nextChannel.subscribe(async (status) => {
@@ -191,25 +205,18 @@ export function useWorkspacePresence({
       isCancelled = true;
       authUnsubscribe?.();
       setIsSubscribed(false);
-      initializeFromMembers(members);
+      useWorkspacePresenceStore.getState().reset();
       if (channelRef.current) {
         void supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
   }, [
-    clearEditingUser,
     currentRole,
     currentUserAvatarUrl,
     currentUserEmail,
     currentUserFullName,
     currentUserId,
-    initializeFromMembers,
-    members,
-    setActiveTarget,
-    setDraggingState,
-    setEditingUser,
-    setUsers,
     tripId,
   ]);
 
@@ -229,11 +236,11 @@ export function useWorkspacePresence({
     });
   }, [currentTarget, currentUserId, isSubscribed]);
 
-  function broadcastDragState(args: {
+  const broadcastDragState = useCallback((args: {
     state: "start" | "end";
     itemId: string;
     columnId: BoardColumnId | null;
-  }) {
+  }) => {
     if (!currentUserId || !channelRef.current) {
       return;
     }
@@ -249,9 +256,12 @@ export function useWorkspacePresence({
         columnId: args.columnId,
       } satisfies WorkspaceDragBroadcastPayload,
     });
-  }
+  }, [currentUserId]);
 
-  function broadcastEditingState(args: { state: "start" | "end"; cardId: string }) {
+  const broadcastEditingState = useCallback((args: {
+    state: "start" | "end";
+    cardId: string;
+  }) => {
     if (!currentUserId || !channelRef.current) {
       return;
     }
@@ -266,7 +276,7 @@ export function useWorkspacePresence({
         cardId: args.cardId,
       } satisfies WorkspaceEditingBroadcastPayload,
     });
-  }
+  }, [currentUserId]);
 
   return {
     broadcastDragState,

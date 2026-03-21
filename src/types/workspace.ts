@@ -88,6 +88,11 @@ export type DraggingPresenceState = {
   columnId: string | null;
 };
 
+export type CardLockState = {
+  userId: string;
+  kind: "editing" | "dragging";
+};
+
 export type RemoteCursor = {
   userId: string;
   x: number;
@@ -98,6 +103,7 @@ export type RemoteCursor = {
 export type EditingPresenceMap = Record<string, string>;
 export type ActiveTargetMap = Record<string, ActiveTargetState>;
 export type DraggingPresenceMap = Record<string, DraggingPresenceState>;
+export type CardLockMap = Record<string, CardLockState>;
 
 export type MoveTripItemInput = {
   tripId: string;

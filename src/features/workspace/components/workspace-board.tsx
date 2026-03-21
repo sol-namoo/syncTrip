@@ -27,6 +27,7 @@ export function WorkspaceBoard({
   capabilities,
   currentUserId,
   onBroadcastDragState,
+  onBroadcastEditingState,
 }: {
   columns: BoardColumnEntity[];
   cardsById: Record<string, BoardCardEntity>;
@@ -38,6 +39,7 @@ export function WorkspaceBoard({
     itemId: string;
     columnId: BoardColumnEntity["id"] | null;
   }) => void;
+  onBroadcastEditingState: (args: { state: "start" | "end"; cardId: string }) => void;
 }) {
   const moveCard = useWorkspaceBoardStore((state) => state.moveCard);
   const replaceBoardState = useWorkspaceBoardStore((state) => state.replaceBoardState);
@@ -48,7 +50,7 @@ export function WorkspaceBoard({
   const activeTargetsByUserId = useWorkspacePresenceStore(
     (state) => state.activeTargetsByUserId
   );
-  const draggingByUserId = useWorkspacePresenceStore((state) => state.draggingByUserId);
+  const cardLocksById = useWorkspacePresenceStore((state) => state.cardLocksById);
   const cardElementsRef = useRef<Record<string, HTMLDivElement | null>>({});
 
   const activeUsers = useMemo(
@@ -117,20 +119,20 @@ export function WorkspaceBoard({
       map[target.id] = [...(map[target.id] ?? []), user];
     }
 
-    for (const [userId, dragging] of Object.entries(draggingByUserId)) {
-      const user = usersById.get(userId);
+    for (const [cardId, lock] of Object.entries(cardLocksById)) {
+      const user = usersById.get(lock.userId);
       if (!user) {
         continue;
       }
 
-      const existing = map[dragging.itemId] ?? [];
+      const existing = map[cardId] ?? [];
       if (!existing.some((entry) => entry.id === user.id)) {
-        map[dragging.itemId] = [...existing, user];
+        map[cardId] = [...existing, user];
       }
     }
 
     return map;
-  }, [activeTargetsByUserId, draggingByUserId, usersById]);
+  }, [activeTargetsByUserId, cardLocksById, usersById]);
 
   useEffect(() => {
     if (!selectedCardId) {
@@ -256,6 +258,11 @@ export function WorkspaceBoard({
                 .filter((card): card is BoardCardEntity => Boolean(card))}
               participants={columnParticipantsById[column.id] ?? []}
               cardParticipantsById={cardParticipantsById}
+              cardLocksById={cardLocksById}
+              currentUserId={currentUserId}
+              canEditItems={capabilities.canEditItems}
+              canRenameDay={capabilities.canEditItems && capabilities.canPersist}
+              onBroadcastEditingState={onBroadcastEditingState}
               registerCardElement={(cardId, element) => {
                 cardElementsRef.current[cardId] = element;
               }}
