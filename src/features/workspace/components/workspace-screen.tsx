@@ -21,7 +21,7 @@ export function WorkspaceScreen({
   actor: WorkspaceActor;
 }) {
   useHydrateWorkspaceStores(snapshot);
-  useWorkspacePresence({
+  const { broadcastDragState } = useWorkspacePresence({
     tripId,
     members: snapshot.members,
     currentUser: actor.user,
@@ -98,6 +98,8 @@ export function WorkspaceScreen({
           cardsById={cardsById}
           tripId={tripId}
           capabilities={actor.capabilities}
+          currentUserId={currentUserId}
+          onBroadcastDragState={broadcastDragState}
         />
       </div>
 

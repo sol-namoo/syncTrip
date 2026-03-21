@@ -31,6 +31,14 @@ export type WorkspaceDragBroadcastPayload = {
   columnId: string | null;
 };
 
+export type WorkspaceEditingBroadcastPayload = {
+  type: "editing";
+  userId: string;
+  state: "start" | "end";
+  cardId: string;
+};
+
 export type WorkspaceBroadcastPayload =
   | WorkspaceTargetBroadcastPayload
-  | WorkspaceDragBroadcastPayload;
+  | WorkspaceDragBroadcastPayload
+  | WorkspaceEditingBroadcastPayload;

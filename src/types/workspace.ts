@@ -77,6 +77,17 @@ export type PresenceUser = {
   avatarUrl?: string | null;
 };
 
+export type ActiveTargetState =
+  | { kind: "card"; id: string }
+  | { kind: "column"; id: string }
+  | { kind: "place"; id: string }
+  | { kind: "none" };
+
+export type DraggingPresenceState = {
+  itemId: string;
+  columnId: string | null;
+};
+
 export type RemoteCursor = {
   userId: string;
   x: number;
@@ -85,6 +96,8 @@ export type RemoteCursor = {
 };
 
 export type EditingPresenceMap = Record<string, string>;
+export type ActiveTargetMap = Record<string, ActiveTargetState>;
+export type DraggingPresenceMap = Record<string, DraggingPresenceState>;
 
 export type MoveTripItemInput = {
   tripId: string;

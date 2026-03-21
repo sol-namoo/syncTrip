@@ -2,6 +2,7 @@
 
 import type { DraggableProvidedDragHandleProps } from "@hello-pangea/dnd";
 import { MapPin, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { AvatarStack, type AvatarStackUser } from "@/components/ui/avatar-stack";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
@@ -33,23 +34,39 @@ export function PlaceCard({
   card,
   dragHandleProps,
   isDragging = false,
+  participants = [],
   cardRef,
 }: {
   card: TripPlaceCard;
   dragHandleProps?: DraggableProvidedDragHandleProps | null;
   isDragging?: boolean;
+  participants?: AvatarStackUser[];
   cardRef?: (element: HTMLDivElement | null) => void;
 }) {
   const selectedCardId = useWorkspaceUiStore((state) => state.selectedCardId);
   const setSelectedCardId = useWorkspaceUiStore((state) => state.setSelectedCardId);
+  const setSelectedColumnId = useWorkspaceUiStore((state) => state.setSelectedColumnId);
 
   const isSelected = selectedCardId === card.id;
+  const leadParticipant = participants[0];
+  const showParticipantStack = participants.length > 1;
+  const collaborativeStyle =
+    !isDragging && participants.length === 1 && leadParticipant?.palette
+      ? {
+          boxShadow: `0 0 0 1px ${leadParticipant.palette.solid}, 0 0 0 4px ${leadParticipant.palette.soft}`,
+          borderColor: leadParticipant.palette.solid,
+        }
+      : undefined;
 
   return (
     <div
       ref={cardRef}
       {...dragHandleProps}
-      onClick={() => setSelectedCardId(card.id)}
+      onClick={(event) => {
+        event.stopPropagation();
+        setSelectedColumnId(null);
+        setSelectedCardId(card.id);
+      }}
       className={cn(
         "select-none cursor-grab overflow-hidden rounded-2xl border border-[color:var(--color-border-card-subtle)] bg-[color:var(--color-bg-card)] text-left shadow-[0_2px_8px_var(--color-shadow-card)] transition-all duration-150 hover:border-[color:var(--color-border-card-hover)] hover:shadow-[0_4px_14px_var(--color-shadow-card-hover)] active:cursor-grabbing",
         isDragging &&
@@ -58,9 +75,18 @@ export function PlaceCard({
           ? "ring-2 ring-[color:var(--color-primary)]/25"
           : ""
       )}
+      style={collaborativeStyle}
     >
       <div className="relative">
         <CardImage imageUrl={card.imageUrl} name={card.name} />
+        {showParticipantStack ? (
+          <AvatarStack
+            users={participants}
+            size="sm"
+            max={2}
+            className="absolute left-2 top-2"
+          />
+        ) : null}
         <Popover>
           <PopoverTrigger asChild>
             <button

@@ -80,7 +80,7 @@ export function WorkspaceHeader({
                   users={collaborators}
                   size="sm"
                   max={3}
-                  className="hidden shrink-0 md:flex"
+                  className="shrink-0"
                 />
               ) : null}
             </>

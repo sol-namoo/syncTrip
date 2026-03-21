@@ -677,7 +677,7 @@
   - 같은 화면 안에서 협업 존재감을 시각적으로 전달한다.
 - 작업 내용
   - 카드/컬럼/장소 단위 active-target broadcast
-  - hover/selection/dragging 상태를 throttle 또는 debounce 기준으로 전송
+  - 카드 선택, 컬럼 선택, 장소 focus, drag start/end 상태를 전송
   - timeout 시 대상 강조 해제
 - 관련 파일/폴더
   - `src/features/workspace/hooks/use-target-broadcast.ts`
@@ -692,7 +692,7 @@
 - 난이도
   - 중
 - 리스크
-  - hover 이벤트를 너무 자주 보내면 노이즈가 커질 수 있다.
+  - 선택 상태와 드래그 상태 해제 타이밍이 어긋나면 잔상처럼 남을 수 있다.
 - 완료 조건
   - 원격 사용자가 현재 보고 있거나 드래그 중인 카드/컬럼/장소가 실시간으로 표시된다.
 
@@ -941,20 +941,21 @@ type PassportStampItem = {
 
 ### 채널 단위
 - 채널 이름
-  - `trip:{tripId}`
+  - `workspace:{tripId}`
 
 ### presence, target sync, card lock, data sync 분리 기준
 
 #### 1. Presence
 - 용도
-  - 접속자 목록, 현재 보고 있는 day, 아바타 상태 스타일에 필요한 세션 메타데이터
+  - 접속자 목록, 아바타 상태 스타일에 필요한 세션 메타데이터
 - 전송 방식
   - Supabase `presence`
 - 저장 위치
   - DB 저장 없음
 - 갱신 트리거
-  - join, leave, day filter 변경
-  - 상태 payload는 `userId`, `displayName`, `color`, `status`를 포함한다.
+  - join, leave
+  - 상태 payload는 `userId`, `displayName`, `role`, `status`, `tabId`를 포함한다.
+  - 협업 색상은 payload에 싣지 않고, 클라이언트가 현재 참가자 집합 기준으로 계산한다.
 
 #### 2. Target Sync
 - 용도
@@ -964,7 +965,7 @@ type PassportStampItem = {
 - 저장 위치
   - DB 저장 없음
 - 갱신 트리거
-  - card hover, selection, drag start/end, place focus
+  - card selection, column selection, drag start/end, place focus
 
 #### 3. Card Lock / Editing Presence
 - 용도
@@ -1010,6 +1011,7 @@ type PassportStampItem = {
 - `postgres_changes`가 늦게 도착해도 로컬 낙관적 상태와 충돌하지 않도록 `updated_at` 기준 최신 row를 우선한다.
 - 같은 사용자가 여러 탭을 열 경우 presence key를 `userId + tabId`로 둔다.
 - MVP에서는 raw cursor 좌표를 보내지 않고, `cardId / columnId / placeId` 같은 domain target만 broadcast한다.
+- hover 이벤트는 노이즈가 커서 MVP 범위에서 제외하고, 클릭/드래그/편집중 상태만 전송한다.
 
 ## 섹션 7: Risks and Tradeoffs
 
