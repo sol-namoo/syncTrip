@@ -48,37 +48,38 @@ export function MapShell({
   );
 
   return (
-    <section className="min-h-80 border-b border-[color:var(--color-border-card)] bg-[color:var(--color-bg-page)] md:min-h-96 xl:min-h-0 xl:border-b-0 xl:border-r">
+    <section className="relative min-h-80 border-b border-border-card-token bg-page md:min-h-96 xl:min-h-0 xl:border-b-0 xl:border-r">
+      <div className="absolute left-4 top-4 z-20 w-[min(26rem,calc(100%-6.5rem))] max-w-full">
+        <PlaceSearchPanel
+          tripId={tripId}
+          dayColumns={dayColumns}
+          capabilities={capabilities}
+        />
+      </div>
+
       <div className="flex h-full min-h-80 flex-col md:min-h-96 xl:min-h-0">
-        <div className="relative min-h-56 flex-1 overflow-hidden bg-[color:var(--color-bg-card)] md:min-h-64 xl:min-h-0">
+        <div className="relative min-h-56 flex-1 overflow-hidden bg-card-surface md:min-h-64 xl:min-h-0">
           <MapCanvas
             markers={markers}
             segments={segments}
             onSelectMarker={setSelectedCardId}
           />
-          <div className="absolute left-4 top-4 z-10 w-[min(26rem,calc(100%-2rem))] max-w-full">
-            <PlaceSearchPanel
-              tripId={tripId}
-              dayColumns={dayColumns}
-              capabilities={capabilities}
-            />
-          </div>
           {markers.length === 0 ? (
-          <div className="pointer-events-none absolute inset-x-0 bottom-10 mx-auto flex max-w-sm flex-col items-center rounded-[24px] bg-[color:var(--color-bg-card)]/92 px-6 py-5 text-center shadow-sm backdrop-blur">
-              <div className="mb-2 inline-flex size-10 items-center justify-center rounded-full bg-[color:var(--day-1)]/45 text-[color:var(--day-1-fg)]">
+          <div className="pointer-events-none absolute inset-x-0 bottom-10 mx-auto flex max-w-sm flex-col items-center rounded-[24px] bg-card-surface/92 px-6 py-5 text-center shadow-sm backdrop-blur">
+              <div className="mb-2 inline-flex size-10 items-center justify-center rounded-full bg-day-1-token/45 text-day-1-fg-token">
                 <Flower2 className="size-5" />
               </div>
-              <p className="text-base font-semibold text-[color:var(--foreground)]">
+              <p className="text-base font-semibold text-foreground">
                 지도에 표시할 장소가 없습니다
               </p>
-              <p className="mt-2 text-sm text-[color:var(--muted-foreground)]">
+              <p className="mt-2 text-sm text-muted-foreground">
                 장소를 추가하면 워크스페이스 지도에 바로 반영됩니다.
               </p>
             </div>
           ) : null}
         </div>
 
-        <div className="border-t border-[color:var(--line)] px-5 py-4 text-sm text-[color:var(--muted-foreground)]">
+        <div className="border-t border-line-token px-5 py-4 text-sm text-muted-foreground">
           총 {cards.length}개 장소 · 선택된 장소 {selectedCardId ? 1 : 0}개
         </div>
       </div>

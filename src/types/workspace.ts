@@ -69,8 +69,23 @@ export type SaveIndicatorState = "idle" | "saving" | "saved" | "error";
 
 export type PresenceUserStatus = "online" | "away" | "offline" | "editing";
 
-export type PresenceUser = WorkspaceMember & {
+export type PresenceUser = {
+  userId: string;
+  role: WorkspaceRole;
   status: PresenceUserStatus;
+  displayName: string;
+  avatarUrl?: string | null;
+};
+
+export type ActiveTargetState =
+  | { kind: "card"; id: string }
+  | { kind: "column"; id: string }
+  | { kind: "place"; id: string }
+  | { kind: "none" };
+
+export type DraggingPresenceState = {
+  itemId: string;
+  columnId: string | null;
 };
 
 export type RemoteCursor = {
@@ -81,6 +96,8 @@ export type RemoteCursor = {
 };
 
 export type EditingPresenceMap = Record<string, string>;
+export type ActiveTargetMap = Record<string, ActiveTargetState>;
+export type DraggingPresenceMap = Record<string, DraggingPresenceState>;
 
 export type MoveTripItemInput = {
   tripId: string;
