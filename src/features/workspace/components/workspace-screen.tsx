@@ -8,7 +8,7 @@ import { useHydrateWorkspaceStores } from "@/features/workspace/hooks/use-hydrat
 import { useWorkspacePresence } from "@/features/workspace/hooks/use-workspace-presence";
 import { useWorkspaceBoardStore } from "@/store/workspace-board-store";
 import { useWorkspacePresenceStore } from "@/store/workspace-presence-store";
-import { collaborationColorTokens } from "@/lib/collaboration-colors";
+import { assignCollaborationColors } from "@/lib/collaboration-colors";
 import type { WorkspaceActor, WorkspaceSnapshot } from "@/types/workspace";
 
 export function WorkspaceScreen({
@@ -25,6 +25,7 @@ export function WorkspaceScreen({
     tripId,
     members: snapshot.members,
     currentUser: actor.user,
+    currentRole: actor.role,
   });
 
   const trip = useWorkspaceBoardStore((state) => state.trip);
@@ -34,41 +35,56 @@ export function WorkspaceScreen({
   const presenceUsers = useWorkspacePresenceStore((state) => state.users);
 
   const boardTrip = trip ?? snapshot.trip;
+  const currentUserId = actor.user?.id;
   const columns = columnOrder
     .map((columnId) => columnsById[columnId])
     .filter((column): column is NonNullable<typeof column> => Boolean(column));
   const cards = Object.values(cardsById).length > 0 ? Object.values(cardsById) : snapshot.cards;
-  const collaborators = useMemo(
-    () => {
-      const activeUsers = presenceUsers
+  const activePresenceUsers = useMemo(
+    () =>
+      presenceUsers
         .filter((member) => member.status !== "offline")
-        .sort((left, right) => left.userId.localeCompare(right.userId));
+        .sort((left, right) => left.userId.localeCompare(right.userId)),
+    [presenceUsers]
+  );
 
-      return activeUsers.map((member, index) => {
-        const isCurrentUser = member.userId === actor.user?.id;
-        const demoName =
-          actor.role === "demo" ? `Demo User ${index + 1}` : `E${index + 1}`;
+  const participantCount = useMemo(() => {
+    const ids = new Set(activePresenceUsers.map((member) => member.userId));
 
+    if (currentUserId) {
+      ids.add(currentUserId);
+    }
+
+    return ids.size;
+  }, [activePresenceUsers, currentUserId]);
+
+  const collaboratorColorMap = useMemo(
+    () => assignCollaborationColors(activePresenceUsers.map((member) => member.userId)),
+    [activePresenceUsers]
+  );
+
+  const collaborators = useMemo(() => {
+    return activePresenceUsers
+      .filter((member) => member.userId !== currentUserId)
+      .map((member) => {
         return {
           id: member.userId,
-          name:
-            actor.role === "demo"
-              ? demoName
-              : isCurrentUser
-                ? actor.user?.fullName ?? actor.user?.email ?? demoName
-                : demoName,
-          src: isCurrentUser ? actor.user?.avatarUrl ?? undefined : undefined,
-          color: collaborationColorTokens[index % collaborationColorTokens.length],
+          name: member.displayName,
+          src: member.avatarUrl ?? undefined,
+          palette: collaboratorColorMap.get(member.userId),
           status: member.status === "away" ? ("away" as const) : ("editing" as const),
         };
       });
-    },
-    [actor.role, actor.user, presenceUsers]
-  );
+  }, [activePresenceUsers, collaboratorColorMap, currentUserId]);
 
   return (
     <main className="flex min-h-screen flex-col bg-[color:var(--color-bg-page)] xl:h-screen xl:overflow-hidden">
-      <WorkspaceHeader trip={boardTrip} actor={actor} collaborators={collaborators} />
+      <WorkspaceHeader
+        trip={boardTrip}
+        actor={actor}
+        collaborators={collaborators}
+        participantCount={participantCount}
+      />
 
       <div className="grid flex-1 grid-cols-1 xl:min-h-0 xl:grid-cols-[1.05fr_1.75fr]">
         <MapShell

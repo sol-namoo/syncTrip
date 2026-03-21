@@ -39,8 +39,11 @@ export function buildPresenceUsersFromState(
     members.map((member) => [
       member.userId,
       {
-        ...member,
+        userId: member.userId,
+        role: member.role as PresenceUser["role"],
         status: "offline" as const,
+        displayName: member.userId,
+        avatarUrl: null,
       },
     ])
   );
@@ -52,15 +55,20 @@ export function buildPresenceUsersFromState(
       if (!existing) {
         usersById.set(presence.userId, {
           userId: presence.userId,
-          role: "editor",
+          role: presence.role,
           status: presence.status === "away" ? "away" : "online",
+          displayName: presence.displayName,
+          avatarUrl: presence.avatarUrl,
         });
         continue;
       }
 
       usersById.set(presence.userId, {
         ...existing,
+        role: presence.role,
         status: presence.status === "away" ? "away" : "online",
+        displayName: presence.displayName,
+        avatarUrl: presence.avatarUrl,
       });
     }
   }

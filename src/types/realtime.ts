@@ -1,10 +1,12 @@
+import type { WorkspaceRole } from "@/types/workspace";
+
 export type WorkspaceChannelTopic = `workspace:${string}`;
 
 export type WorkspacePresenceMeta = {
   userId: string;
   displayName: string;
   avatarUrl: string | null;
-  colorKey: string;
+  role: WorkspaceRole;
   status: "online" | "away";
   tabId: string;
 };
@@ -32,4 +34,3 @@ export type WorkspaceDragBroadcastPayload = {
 export type WorkspaceBroadcastPayload =
   | WorkspaceTargetBroadcastPayload
   | WorkspaceDragBroadcastPayload;
-

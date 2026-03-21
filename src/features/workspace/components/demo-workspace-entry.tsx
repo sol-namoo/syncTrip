@@ -6,6 +6,14 @@ import { buildWorkspaceActor } from "@/features/workspace/lib/access";
 import { createClient } from "@/lib/supabase/client";
 import type { WorkspaceActor, WorkspaceSnapshot } from "@/types/workspace";
 
+function getDemoDisplayName(userId?: string) {
+  if (!userId) {
+    return "Demo User";
+  }
+
+  return `Demo ${userId.slice(0, 4).toUpperCase()}`;
+}
+
 function buildDemoActor(user: {
   id?: string;
   email?: string;
@@ -46,7 +54,7 @@ export function DemoWorkspaceEntry({
             fullName:
               existingUser.user_metadata?.full_name ??
               existingUser.user_metadata?.name ??
-              "Demo User",
+              getDemoDisplayName(existingUser.id),
             avatarUrl: existingUser.user_metadata?.avatar_url,
           })
         );
@@ -83,9 +91,14 @@ export function DemoWorkspaceEntry({
           id: data.user.id,
           email: data.user.email,
           fullName:
-            data.user.user_metadata?.full_name ??
-            data.user.user_metadata?.name ??
-            "Demo User",
+            (data.user.user_metadata?.full_name &&
+            data.user.user_metadata?.full_name !== "Demo User"
+              ? data.user.user_metadata?.full_name
+              : undefined) ??
+            (data.user.user_metadata?.name && data.user.user_metadata?.name !== "Demo User"
+              ? data.user.user_metadata?.name
+              : undefined) ??
+            getDemoDisplayName(data.user.id),
           avatarUrl: data.user.user_metadata?.avatar_url,
         })
       );

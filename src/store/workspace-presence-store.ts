@@ -25,8 +25,11 @@ export const useWorkspacePresenceStore = create<WorkspacePresenceState>((set) =>
   initializeFromMembers: (members) => {
     set({
       users: members.map((member) => ({
-        ...member,
+        userId: member.userId,
+        role: member.role as PresenceUser["role"],
         status: "offline",
+        displayName: member.userId,
+        avatarUrl: null,
       })),
     });
   },

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import {
   buildPresenceUsersFromState,
@@ -9,12 +10,13 @@ import {
 } from "@/features/workspace/lib/realtime-channel";
 import { useWorkspacePresenceStore } from "@/store/workspace-presence-store";
 import type { WorkspacePresenceMeta } from "@/types/realtime";
-import type { WorkspaceMember } from "@/types/workspace";
+import type { WorkspaceMember, WorkspaceRole } from "@/types/workspace";
 
 export function useWorkspacePresence({
   tripId,
   members,
   currentUser,
+  currentRole,
 }: {
   tripId: string;
   members: WorkspaceMember[];
@@ -24,6 +26,7 @@ export function useWorkspacePresence({
     fullName?: string;
     avatarUrl?: string;
   } | null;
+  currentRole: WorkspaceRole;
 }) {
   const setUsers = useWorkspacePresenceStore((state) => state.setUsers);
   const initializeFromMembers = useWorkspacePresenceStore(
@@ -50,54 +53,76 @@ export function useWorkspacePresence({
     const supabase = createClient();
     const tabId = crypto.randomUUID();
     const presenceKey = buildWorkspacePresenceKey(user.id, tabId);
-    const channel = createWorkspaceRealtimeChannel(supabase, {
-      tripId,
-      presenceKey,
-    });
-
     let isCancelled = false;
+    let channel: RealtimeChannel | null = null;
+    let authUnsubscribe: (() => void) | null = null;
 
-    async function connect() {
+    async function connect(accessToken: string) {
+      if (isCancelled || channel) {
+        return;
+      }
+
+      await supabase.realtime.setAuth(accessToken);
+      const nextChannel = createWorkspaceRealtimeChannel(supabase, {
+        tripId,
+        presenceKey,
+      });
+      channel = nextChannel;
+
+      nextChannel.on("presence", { event: "sync" }, () => {
+        if (isCancelled) {
+          return;
+        }
+
+        const state = nextChannel.presenceState<WorkspacePresenceMeta>();
+        const nextUsers = buildPresenceUsersFromState(state, members);
+        setUsers(nextUsers);
+      });
+
+      nextChannel.subscribe(async (status) => {
+        if (status !== "SUBSCRIBED" || isCancelled) {
+          return;
+        }
+
+        await nextChannel.track({
+          userId: user.id,
+          displayName: user.fullName ?? user.email ?? "Unknown",
+          avatarUrl: user.avatarUrl ?? null,
+          role: currentRole,
+          status: "online",
+          tabId,
+        } satisfies WorkspacePresenceMeta);
+      });
+    }
+
+    void (async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
       if (session?.access_token) {
-        await supabase.realtime.setAuth(session.access_token);
+        await connect(session.access_token);
+        return;
       }
 
-      channel.on("presence", { event: "sync" }, () => {
-        if (isCancelled) {
-          return;
+      const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+        if (nextSession?.access_token) {
+          void connect(nextSession.access_token);
         }
-
-        const state = channel.presenceState<WorkspacePresenceMeta>();
-        const nextUsers = buildPresenceUsersFromState(state, members);
-        setUsers(nextUsers);
       });
 
-      channel.subscribe(async (status) => {
-        if (status !== "SUBSCRIBED" || isCancelled) {
-          return;
-        }
-
-        await channel.track({
-          userId: user.id,
-          displayName: user.fullName ?? user.email ?? "Unknown",
-          avatarUrl: user.avatarUrl ?? null,
-          colorKey: user.id,
-          status: "online",
-          tabId,
-        });
-      });
-    }
-
-    void connect();
+      authUnsubscribe = () => {
+        data.subscription.unsubscribe();
+      };
+    })();
 
     return () => {
       isCancelled = true;
+      authUnsubscribe?.();
       initializeFromMembers(members);
-      void supabase.removeChannel(channel);
+      if (channel) {
+        void supabase.removeChannel(channel);
+      }
     };
   }, [
     currentUserAvatarUrl,
@@ -107,6 +132,7 @@ export function useWorkspacePresence({
     initializeFromMembers,
     members,
     setUsers,
+    currentRole,
     tripId,
   ]);
 }

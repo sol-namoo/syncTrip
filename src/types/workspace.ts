@@ -69,8 +69,12 @@ export type SaveIndicatorState = "idle" | "saving" | "saved" | "error";
 
 export type PresenceUserStatus = "online" | "away" | "offline" | "editing";
 
-export type PresenceUser = WorkspaceMember & {
+export type PresenceUser = {
+  userId: string;
+  role: WorkspaceRole;
   status: PresenceUserStatus;
+  displayName: string;
+  avatarUrl?: string | null;
 };
 
 export type RemoteCursor = {
