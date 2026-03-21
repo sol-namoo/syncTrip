@@ -137,6 +137,33 @@
 
 ## 6. Realtime and WebSocket
 
+### 6.1. Realtime Model for Workspace
+
+- SyncTrip MVP는 raw mouse cursor 공유보다 `현재 작업 중인 대상` 표시를 우선한다.
+- 이유:
+  - 사용자마다 화면 크기, 스크롤 위치, 지도 줌/팬 상태가 달라서 픽셀 좌표 broadcast는 쉽게 어긋난다.
+  - 제품적으로도 상대 마우스의 정확한 좌표보다 `누가 어떤 카드/컬럼/장소를 보고 있는지`가 더 중요하다.
+- 기준:
+  - `Presence` = 접속자 목록, 아바타, 사용자 메타데이터
+  - `Broadcast` = `selectedCardId`, `draggingItemId`, `focusedColumnId`, `focusedPlaceId` 같은 active target
+  - `Postgres Changes` = `trip_items` 영속 데이터 변경
+- UI 표현:
+  - 카드/컬럼/장소 marker에 avatar, outline, shadow를 붙여 점유/작업 중 상태를 보여준다.
+
+### 6.2. Demo Role Boundary
+
+- `/workspace/demo`는 고정 fake user를 쓰지 않고 `anonymous auth` 세션으로 입장시킨다.
+- `demo`는 DB 멤버십 role이 아니다.
+- 따라서 `trip_members.role`과 `TripMemberRole`에는 `demo`를 추가하지 않는다.
+- 구분:
+  - `TripMemberRole`
+    - DB 권한 원본
+    - `owner | editor`
+  - `WorkspaceRole`
+    - 앱/UI 사용자 유형
+    - `demo | owner | editor`
+- 즉 demo는 앱 레벨 capability 모델로만 다룬다.
+
 ## 7. Supabase Integration
 
 ### 7.1. Postgres Function, RPC, Edge Function, Next.js Server Code

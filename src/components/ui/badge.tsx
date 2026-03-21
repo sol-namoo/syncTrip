@@ -3,27 +3,27 @@ import { cn } from "@/lib/utils";
 
 const variantClasses = {
   neutral:
-    "border border-[color:var(--color-primary)]/15 bg-[color:var(--color-bg-page)] text-[color:var(--color-primary)]",
+    "border border-primary/15 bg-page text-primary",
   sage:
-    "border border-[color:var(--color-primary)]/20 bg-[color:var(--sage)]/40 text-[color:var(--color-primary)]",
+    "border border-primary/20 bg-sage/40 text-primary",
   periwinkle:
-    "border border-[color:var(--peri-dark)]/20 bg-[color:var(--peri)]/45 text-[color:var(--peri-dark)]",
+    "border border-peri-dark-token/20 bg-peri/45 text-peri-dark-token",
   marigold:
-    "border border-[color:var(--marigold-dark)]/20 bg-[color:var(--marigold)]/45 text-[color:var(--marigold-dark)]",
+    "border border-marigold-dark-token/20 bg-marigold/45 text-marigold-dark-token",
   terra:
-    "border border-[color:var(--color-danger)]/20 bg-[color:var(--color-danger)]/10 text-[color:var(--color-danger)]",
+    "border border-destructive/20 bg-destructive/10 text-destructive",
   online:
-    "border border-[color:var(--color-primary)]/30 bg-[color:var(--color-bg-page)] text-[color:var(--color-primary)]",
+    "border border-primary/30 bg-page text-primary",
   outline:
-    "border border-[color:var(--color-primary)]/15 bg-white text-[color:var(--color-ink)]",
+    "border border-primary/15 bg-white text-foreground",
   primary:
-    "border border-[color:var(--color-primary)]/20 bg-[color:var(--sage)]/40 text-[color:var(--color-primary)]",
+    "border border-primary/20 bg-sage/40 text-primary",
   success:
-    "border border-[color:var(--color-primary)]/20 bg-[color:var(--sage)]/40 text-[color:var(--color-primary)]",
+    "border border-primary/20 bg-sage/40 text-primary",
   warning:
-    "border border-[color:var(--color-tertiary)]/20 bg-[color:var(--marigold)]/40 text-[color:var(--color-tertiary)]",
+    "border border-tertiary/20 bg-marigold/40 text-tertiary",
   danger:
-    "border border-[color:var(--color-danger)]/20 bg-[color:var(--color-danger)]/10 text-[color:var(--color-danger)]",
+    "border border-destructive/20 bg-destructive/10 text-destructive",
 } as const;
 
 export type BadgeVariant = keyof typeof variantClasses;

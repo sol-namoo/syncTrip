@@ -31,53 +31,73 @@ export function WorkspaceHeader({
   trip,
   actor,
   collaborators,
+  participantCount,
 }: {
   trip: WorkspaceTrip;
   actor: WorkspaceActor;
   collaborators: AvatarStackUser[];
+  participantCount: number;
 }) {
   const saveState = useWorkspaceUiStore((state) => state.saveState);
 
   return (
     <section className="border-b border-black/7 bg-white">
-      <div className="flex h-18 items-center justify-between gap-4 px-6">
-        <div className="flex min-w-0 items-center gap-6">
+      <div className="flex min-h-18 flex-wrap items-center justify-between gap-x-4 gap-y-3 px-4 py-3 md:px-6 xl:h-18 xl:flex-nowrap xl:py-0">
+        <div className="flex min-w-0 flex-1 items-center gap-4 md:gap-6">
           <Link href="/trips" className="flex items-center gap-2">
-            <Plane className="size-6 -rotate-12 text-[color:var(--color-primary)]" />
-            <span className="text-xl font-bold text-[color:var(--foreground)]">SyncTrip</span>
+            <Plane className="size-6 -rotate-12 text-primary" />
+            <span className="text-xl font-bold text-foreground">SyncTrip</span>
           </Link>
-          <div className="hidden h-6 w-px bg-[color:var(--line)] md:block" />
-          <p className="truncate text-xl font-semibold text-[color:var(--foreground)]">{trip.title}</p>
-          <span className="hidden text-sm text-[color:var(--muted-foreground)] md:block">
-            {trip.startDate} ~ {trip.endDate}
-          </span>
+          <div className="hidden h-6 w-px bg-line-token md:block" />
+          <div className="min-w-0 xl:flex xl:min-w-0 xl:items-center xl:gap-5">
+            <p className="truncate text-lg font-semibold text-foreground md:text-xl">{trip.title}</p>
+            <span className="block text-sm text-muted-foreground xl:truncate">
+              {trip.startDate} ~ {trip.endDate}
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex shrink-0 items-center gap-2 md:gap-3">
           {saveState !== "idle" ? (
             <Badge tone={SAVE_STATE_TONE[saveState]}>{SAVE_STATE_LABEL[saveState]}</Badge>
           ) : null}
-          {collaborators.length > 0 ? (
+          {participantCount > 0 ? (
             <>
               <Badge
                 variant="online"
-                className="hidden gap-2 border-[0.5px] px-3 py-1 text-[11px] font-semibold md:inline-flex"
+                className="hidden shrink-0 whitespace-nowrap gap-2 border-[0.5px] px-3 py-1 text-[11px] font-semibold md:inline-flex"
                 style={{
                   background: "rgba(37,99,235,0.10)",
                   borderColor: "rgba(37,99,235,0.20)",
                 }}
               >
                 <span className="size-1.5 rounded-full bg-[color:var(--color-online)] animate-[pulse_2s_ease-in-out_infinite]" />
-                {collaborators.length}명 편집 중
+                <span className="lg:hidden">{participantCount}명</span>
+                <span className="hidden lg:inline">{participantCount}명 편집 중</span>
               </Badge>
-              <AvatarStack users={collaborators} size="sm" max={3} className="hidden md:flex" />
+              {collaborators.length > 0 ? (
+                <AvatarStack
+                  users={collaborators}
+                  size="sm"
+                  max={3}
+                  className="hidden shrink-0 md:flex"
+                />
+              ) : null}
             </>
           ) : null}
           <Button
             type="button"
             variant="outline"
             disabled={!actor.capabilities.canExport}
-            className="hidden rounded-full md:inline-flex"
+            className="hidden rounded-full md:inline-flex lg:hidden"
+          >
+            3D
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={!actor.capabilities.canExport}
+            className="hidden rounded-full lg:inline-flex"
           >
             3D 여권 발급받기
           </Button>
@@ -85,7 +105,15 @@ export function WorkspaceHeader({
             type="button"
             variant="primary"
             disabled={!actor.capabilities.canInvite}
-            className="hidden rounded-full md:inline-flex"
+            className="hidden rounded-full md:inline-flex lg:hidden"
+          >
+            초대
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            disabled={!actor.capabilities.canInvite}
+            className="hidden rounded-full lg:inline-flex"
           >
             친구 초대
           </Button>

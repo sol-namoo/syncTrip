@@ -10,26 +10,26 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-[color:var(--color-primary)] text-[color:var(--color-primary-fg)] shadow-sm hover:bg-[color:color-mix(in_srgb,var(--color-primary)_92%,black)]",
+          "bg-primary text-primary-foreground shadow-sm hover:brightness-95",
         default:
-          "bg-[color:var(--color-primary)] text-[color:var(--color-primary-fg)] shadow-sm hover:bg-[color:color-mix(in_srgb,var(--color-primary)_92%,black)]",
+          "bg-primary text-primary-foreground shadow-sm hover:brightness-95",
         destructive:
-          "bg-[color:var(--color-danger)] text-[color:var(--color-danger-fg)] shadow-sm hover:bg-[color:color-mix(in_srgb,var(--color-danger)_90%,black)]",
+          "bg-destructive text-destructive-foreground shadow-sm hover:brightness-95",
         outline:
-          "border border-[color:var(--color-border-card)] bg-transparent text-[color:var(--color-primary)] hover:bg-[color:var(--surface-muted)]",
+          "border border-border-card-token bg-transparent text-primary hover:bg-surface-muted-token",
         secondary:
-          "bg-[color:var(--color-secondary)] text-[color:var(--color-secondary-fg)] shadow-sm hover:bg-[color:color-mix(in_srgb,var(--color-secondary)_92%,black)]",
+          "bg-secondary text-secondary-foreground shadow-sm hover:brightness-95",
         tertiary:
-          "bg-[color:var(--color-tertiary)] text-[color:var(--color-tertiary-fg)] shadow-sm hover:bg-[color:color-mix(in_srgb,var(--color-tertiary)_92%,black)]",
+          "bg-tertiary text-tertiary-foreground shadow-sm hover:brightness-95",
         ghost:
-          "bg-transparent text-[color:var(--color-primary)] hover:bg-[color:var(--surface-muted)]",
-        link: "text-[color:var(--color-primary)] underline-offset-4 hover:underline",
+          "bg-transparent text-primary hover:bg-surface-muted-token",
+        link: "text-primary underline-offset-4 hover:underline",
         day1:
-          "border border-[color:var(--color-primary)]/25 bg-[color:var(--sage)]/40 text-[color:var(--color-primary)] hover:bg-[color:var(--sage)]/60",
+          "border border-primary/25 bg-sage/40 text-primary hover:bg-sage/60",
         day2:
-          "border border-[color:var(--peri-dark)]/20 bg-[color:var(--peri)]/50 text-[color:var(--peri-dark)] hover:bg-[color:var(--peri)]/70",
+          "border border-peri-dark-token/20 bg-peri/50 text-peri-dark-token hover:bg-peri/70",
         day3:
-          "border border-[color:var(--marigold-dark)]/20 bg-[color:var(--marigold)]/55 text-[color:var(--marigold-dark)] hover:bg-[color:var(--marigold)]/75",
+          "border border-marigold-dark-token/20 bg-marigold/55 text-marigold-dark-token hover:bg-marigold/75",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
