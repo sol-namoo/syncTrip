@@ -1,31 +1,59 @@
 "use client";
 
+import { AvatarStack, type AvatarStackUser } from "@/components/ui/avatar-stack";
 import { Button } from "@/components/ui/button";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { getDayTokens } from "@/features/workspace/lib/day-tokens";
 import { PlaceCard } from "@/features/workspace/components/place-card";
+import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
 import type { BoardColumnEntity, BoardCardEntity } from "@/types/workspace";
 
 export function WorkspaceColumn({
   column,
   cards,
+  participants,
+  cardParticipantsById,
   registerCardElement,
 }: {
   column: BoardColumnEntity;
   cards: BoardCardEntity[];
+  participants: AvatarStackUser[];
+  cardParticipantsById: Record<string, AvatarStackUser[]>;
   registerCardElement: (cardId: string, element: HTMLDivElement | null) => void;
 }) {
   const isBucket = column.id === "bucket";
   const dayNumber = column.position ?? 1;
   const dayTokens = getDayTokens(dayNumber);
+  const selectedColumnId = useWorkspaceUiStore((state) => state.selectedColumnId);
+  const setSelectedColumnId = useWorkspaceUiStore((state) => state.setSelectedColumnId);
+  const setSelectedCardId = useWorkspaceUiStore((state) => state.setSelectedCardId);
+  const isSelected = selectedColumnId === column.id;
+  const leadParticipant = participants[0];
+  const showParticipantStack = participants.length > 1;
+  const collaborativeStyle =
+    participants.length === 1 && leadParticipant?.palette
+      ? {
+          borderColor: leadParticipant.palette.solid,
+          boxShadow: `0 0 0 1px ${leadParticipant.palette.solid}, 0 0 0 4px ${leadParticipant.palette.soft}`,
+        }
+      : undefined;
 
   return (
     <div
+      onClick={() => {
+        setSelectedColumnId(column.id);
+        setSelectedCardId(null);
+      }}
       className={
         isBucket
-          ? "order-last flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-dashed border-[color:var(--color-col-border)] bg-card-surface xl:order-none"
-          : "flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-border-card-token bg-card-surface"
+          ? `order-last flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-dashed bg-card-surface xl:order-none ${
+              isSelected ? "border-primary/60 ring-2 ring-primary/15" : "border-col-border-token"
+            }`
+          : `flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl border bg-card-surface ${
+              isSelected ? "border-primary/60 ring-2 ring-primary/15" : "border-border-card-token"
+            }`
       }
+      style={collaborativeStyle}
     >
       <div className="bg-card-surface p-4 pb-3">
         <div className="flex items-center justify-between">
@@ -38,17 +66,22 @@ export function WorkspaceColumn({
             ) : null}
             <h3 className="truncate font-bold text-[color:var(--color-ink)]">{column.title}</h3>
           </div>
-          {column.dateLabel ? (
-            <span
-              className="rounded-full px-2.5 py-0.5 text-xs font-bold"
-              style={{
-                backgroundColor: dayTokens.accent,
-                color: dayTokens.fg,
-              }}
-            >
-              {column.dateLabel}
-            </span>
-          ) : null}
+          <div className="flex items-center gap-2">
+            {showParticipantStack ? (
+              <AvatarStack users={participants} size="sm" max={2} />
+            ) : null}
+            {column.dateLabel ? (
+              <span
+                className="rounded-full px-2.5 py-0.5 text-xs font-bold"
+                style={{
+                  backgroundColor: dayTokens.accent,
+                  color: dayTokens.fg,
+                }}
+              >
+                {column.dateLabel}
+              </span>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -69,6 +102,7 @@ export function WorkspaceColumn({
                           card={card}
                           dragHandleProps={draggableProvided.dragHandleProps}
                           isDragging={draggableSnapshot.isDragging}
+                          participants={cardParticipantsById[card.id] ?? []}
                           cardRef={(element) => {
                             draggableProvided.innerRef(element);
                             registerCardElement(card.id, element);

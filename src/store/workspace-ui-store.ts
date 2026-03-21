@@ -4,12 +4,14 @@ import type { BoardColumnId, SaveIndicatorState } from "@/types/workspace";
 type WorkspaceUiState = {
   splitPaneRatio: number;
   selectedCardId: string | null;
+  selectedColumnId: BoardColumnId | null;
   activeDayFilter: BoardColumnId | "all";
   searchQuery: string;
   dragActiveId: string | null;
   saveState: SaveIndicatorState;
   setSplitPaneRatio: (ratio: number) => void;
   setSelectedCardId: (cardId: string | null) => void;
+  setSelectedColumnId: (columnId: BoardColumnId | null) => void;
   setActiveDayFilter: (filter: BoardColumnId | "all") => void;
   setSearchQuery: (query: string) => void;
   setDragActiveId: (cardId: string | null) => void;
@@ -20,6 +22,7 @@ type WorkspaceUiState = {
 const initialUiState = {
   splitPaneRatio: 0.42,
   selectedCardId: null,
+  selectedColumnId: null,
   activeDayFilter: "all" as const,
   searchQuery: "",
   dragActiveId: null,
@@ -35,6 +38,9 @@ export const useWorkspaceUiStore = create<WorkspaceUiState>((set) => ({
   },
   setSelectedCardId: (cardId) => {
     set({ selectedCardId: cardId });
+  },
+  setSelectedColumnId: (columnId) => {
+    set({ selectedColumnId: columnId });
   },
   setActiveDayFilter: (filter) => {
     set({ activeDayFilter: filter });

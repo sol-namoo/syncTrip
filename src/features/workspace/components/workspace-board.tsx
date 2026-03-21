@@ -1,12 +1,19 @@
 "use client";
 
-import { DragDropContext, type DropResult } from "@hello-pangea/dnd";
-import { useEffect, useRef } from "react";
+import {
+  DragDropContext,
+  type DragStart,
+  type DropResult,
+} from "@hello-pangea/dnd";
+import { useEffect, useMemo, useRef } from "react";
 import { useMoveTripItemMutation } from "@/features/workspace/hooks/use-move-trip-item-mutation";
 import { WorkspaceColumn } from "@/features/workspace/components/workspace-column";
 import { toast } from "@/components/ui/toast";
 import { useWorkspaceBoardStore } from "@/store/workspace-board-store";
+import { useWorkspacePresenceStore } from "@/store/workspace-presence-store";
 import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
+import { assignCollaborationColors } from "@/lib/collaboration-colors";
+import type { AvatarStackUser } from "@/components/ui/avatar-stack";
 import type {
   BoardCardEntity,
   BoardColumnEntity,
@@ -18,18 +25,112 @@ export function WorkspaceBoard({
   cardsById,
   tripId,
   capabilities,
+  currentUserId,
+  onBroadcastDragState,
 }: {
   columns: BoardColumnEntity[];
   cardsById: Record<string, BoardCardEntity>;
   tripId: string;
   capabilities: WorkspaceCapabilities;
+  currentUserId?: string;
+  onBroadcastDragState: (args: {
+    state: "start" | "end";
+    itemId: string;
+    columnId: BoardColumnEntity["id"] | null;
+  }) => void;
 }) {
   const moveCard = useWorkspaceBoardStore((state) => state.moveCard);
   const replaceBoardState = useWorkspaceBoardStore((state) => state.replaceBoardState);
   const mutation = useMoveTripItemMutation();
   const selectedCardId = useWorkspaceUiStore((state) => state.selectedCardId);
   const setSaveState = useWorkspaceUiStore((state) => state.setSaveState);
+  const presenceUsers = useWorkspacePresenceStore((state) => state.users);
+  const activeTargetsByUserId = useWorkspacePresenceStore(
+    (state) => state.activeTargetsByUserId
+  );
+  const draggingByUserId = useWorkspacePresenceStore((state) => state.draggingByUserId);
   const cardElementsRef = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const activeUsers = useMemo(
+    () =>
+      presenceUsers
+        .filter((user) => user.status !== "offline")
+        .filter((user) => user.userId !== currentUserId)
+        .sort((left, right) => left.userId.localeCompare(right.userId)),
+    [currentUserId, presenceUsers]
+  );
+
+  const collaboratorColors = useMemo(
+    () => assignCollaborationColors(activeUsers.map((user) => user.userId)),
+    [activeUsers]
+  );
+
+  const usersById = useMemo(
+    () =>
+      new Map(
+        activeUsers.map((user) => [
+          user.userId,
+          {
+            id: user.userId,
+            name: user.displayName,
+            src: user.avatarUrl ?? undefined,
+            palette: collaboratorColors.get(user.userId),
+            status: user.status === "away" ? ("away" as const) : ("editing" as const),
+          } satisfies AvatarStackUser,
+        ])
+      ),
+    [activeUsers, collaboratorColors]
+  );
+
+  const columnParticipantsById = useMemo(() => {
+    const map: Record<string, AvatarStackUser[]> = {};
+
+    for (const [userId, target] of Object.entries(activeTargetsByUserId)) {
+      if (target.kind !== "column") {
+        continue;
+      }
+
+      const user = usersById.get(userId);
+      if (!user) {
+        continue;
+      }
+
+      map[target.id] = [...(map[target.id] ?? []), user];
+    }
+
+    return map;
+  }, [activeTargetsByUserId, usersById]);
+
+  const cardParticipantsById = useMemo(() => {
+    const map: Record<string, AvatarStackUser[]> = {};
+
+    for (const [userId, target] of Object.entries(activeTargetsByUserId)) {
+      if (target.kind !== "card") {
+        continue;
+      }
+
+      const user = usersById.get(userId);
+      if (!user) {
+        continue;
+      }
+
+      map[target.id] = [...(map[target.id] ?? []), user];
+    }
+
+    for (const [userId, dragging] of Object.entries(draggingByUserId)) {
+      const user = usersById.get(userId);
+      if (!user) {
+        continue;
+      }
+
+      const existing = map[dragging.itemId] ?? [];
+      if (!existing.some((entry) => entry.id === user.id)) {
+        map[dragging.itemId] = [...existing, user];
+      }
+    }
+
+    return map;
+  }, [activeTargetsByUserId, draggingByUserId, usersById]);
 
   useEffect(() => {
     if (!selectedCardId) {
@@ -49,7 +150,23 @@ export function WorkspaceBoard({
     });
   }, [selectedCardId]);
 
+  function handleDragStart(start: DragStart) {
+    onBroadcastDragState({
+      state: "start",
+      itemId: start.draggableId,
+      columnId: start.source.droppableId as BoardColumnEntity["id"],
+    });
+  }
+
   async function handleDragEnd(result: DropResult) {
+    onBroadcastDragState({
+      state: "end",
+      itemId: result.draggableId,
+      columnId: result.destination
+        ? (result.destination.droppableId as BoardColumnEntity["id"])
+        : null,
+    });
+
     if (!capabilities.canEditItems || !capabilities.canPersist) {
       toast.error("현재 권한으로는 일정을 저장할 수 없습니다.");
       return;
@@ -128,7 +245,7 @@ export function WorkspaceBoard({
 
   return (
     <section className="relative min-w-0 overflow-hidden bg-[color:var(--color-bg-page)]">
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="flex h-full min-w-0 gap-4 overflow-x-auto p-6">
           {columns.map((column) => (
             <WorkspaceColumn
@@ -137,6 +254,8 @@ export function WorkspaceBoard({
               cards={column.cardIds
                 .map((cardId) => cardsById[cardId])
                 .filter((card): card is BoardCardEntity => Boolean(card))}
+              participants={columnParticipantsById[column.id] ?? []}
+              cardParticipantsById={cardParticipantsById}
               registerCardElement={(cardId, element) => {
                 cardElementsRef.current[cardId] = element;
               }}
