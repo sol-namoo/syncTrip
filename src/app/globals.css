@@ -115,6 +115,14 @@
   --font-sans: var(--font-sans);
   --color-page: var(--color-bg-page);
   --color-card-surface: var(--color-bg-card);
+  --color-border-card-token: var(--color-border-card);
+  --color-border-card-subtle-token: var(--color-border-card-subtle);
+  --color-surface-muted-token: var(--surface-muted);
+  --color-line-token: var(--line);
+  --color-peri-dark-token: var(--peri-dark);
+  --color-marigold-dark-token: var(--marigold-dark);
+  --color-day-1-token: var(--day-1);
+  --color-day-1-fg-token: var(--day-1-fg);
   --color-primary-token: var(--color-primary);
   --color-secondary-token: var(--color-secondary);
   --color-tertiary-token: var(--color-tertiary);

@@ -115,20 +115,20 @@ function PlaceSearchPanelInner({
   const selectedResult =
     results.find((result) => result.placeId === selectedPlaceId) ?? null;
   return (
-    <div className="w-full rounded-[20px] border border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] p-3 shadow-[0_12px_24px_rgba(15,23,42,0.10)]">
+    <div className="w-full rounded-[20px] border border-border-card-token bg-card-surface p-3 shadow-[0_12px_24px_rgba(15,23,42,0.10)]">
       <div className="relative">
         <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-[color:var(--color-ink-muted)]" />
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={adapter.isReady ? "장소 검색..." : "Places 로딩 중..."}
-          className="w-full rounded-lg border border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] py-2.5 pl-11 pr-3 text-sm text-[color:var(--color-ink)] outline-none transition-colors placeholder:text-[color:var(--color-ink-muted)] focus:border-[color:var(--color-primary)]"
+          className="w-full rounded-lg border border-border-card-token bg-card-surface py-2.5 pl-11 pr-3 text-sm text-[color:var(--color-ink)] outline-none transition-colors placeholder:text-[color:var(--color-ink-muted)]"
           disabled={!adapter.isReady}
         />
       </div>
 
       {query.trim() ? (
-        <div className="mt-2 overflow-hidden rounded-lg border border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)]">
+        <div className="mt-2 overflow-hidden rounded-lg border border-border-card-token bg-card-surface">
           {isSearching ? (
             <div className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-[color:var(--color-ink-muted)]">
               <Loader2 className="size-4 animate-spin" />
@@ -147,8 +147,8 @@ function PlaceSearchPanelInner({
                   onClick={() => setSelectedPlaceId(result.placeId)}
                   className={
                     selectedPlaceId === result.placeId
-                      ? "flex w-full items-start gap-3 border-b border-[color:var(--color-border-card)]/70 bg-[color:var(--surface-muted)] px-3 py-3 text-left last:border-b-0"
-                      : "flex w-full items-start gap-3 border-b border-[color:var(--color-border-card)]/70 px-3 py-3 text-left transition-colors hover:bg-[color:var(--surface-muted)]/70 last:border-b-0"
+                      ? "flex w-full items-start gap-3 border-b border-border-card-token/70 bg-surface-muted-token px-3 py-3 text-left last:border-b-0"
+                      : "flex w-full items-start gap-3 border-b border-border-card-token/70 px-3 py-3 text-left transition-colors hover:bg-surface-muted-token/70 last:border-b-0"
                   }
                 >
                   <div className="size-14 shrink-0 overflow-hidden rounded-xl bg-[color:var(--surface-muted)]">
@@ -188,7 +188,7 @@ function PlaceSearchPanelInner({
       ) : null}
 
       {selectedResult ? (
-        <div className="mt-2 rounded-lg border border-[color:var(--color-border-card)] bg-[color:var(--surface-muted)] px-3 py-3">
+        <div className="mt-2 rounded-lg border border-border-card-token bg-surface-muted-token px-3 py-3">
           <p className="text-sm font-medium text-[color:var(--color-ink)]">
             선택한 장소를 다음 날짜에 추가
           </p>
@@ -240,7 +240,7 @@ export function PlaceSearchPanel(props: {
 
   if (!apiKey) {
     return (
-      <div className="w-full rounded-lg border border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] px-3 py-2 text-sm text-[color:var(--color-ink-muted)]">
+      <div className="w-full rounded-lg border border-border-card-token bg-card-surface px-3 py-2 text-sm text-[color:var(--color-ink-muted)]">
         Google Maps API key가 없어 장소 검색을 사용할 수 없습니다.
       </div>
     );

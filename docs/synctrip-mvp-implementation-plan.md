@@ -8,7 +8,9 @@
 - 장소 검색 결과를 별도 페이지로 보내지 않고, Workspace 내부에서 처리한다.
 - 검색 결과는 `장소 바구니`에 넣을 수도 있고 특정 `Day`에 바로 넣을 수도 있다.
 - 여행 기간 기준으로 `Day 1..N` 컬럼을 자동 생성한다. MVP에서는 컬럼 추가/삭제 커스터마이징을 후순위로 둔다.
-- 실시간 협업은 별도 패널이 아니라 `헤더의 접속자`, `카드 편집 상태`, `멀티 커서`, `카드 이동 동기화`로 분산 노출한다.
+- 실시간 협업은 별도 패널이 아니라 `헤더의 접속자`, `현재 작업 중인 카드/컬럼/장소 표시`, `카드 이동 동기화`로 분산 노출한다.
+- `/workspace/demo`는 고정 fake user가 아니라 `anonymous auth` 기반 데모 세션으로 동작시킨다.
+- `demo`는 DB 멤버십 role이 아니라 앱 레벨 `WorkspaceRole`로만 취급한다.
 - 카드 자체가 일정의 최소 저장 단위다. 장소 메타데이터, 일자 배치, 정렬 순서, 메모를 모두 카드 row에 둔다.
 - 충돌 해결은 CRDT 대신 `누가 편집 중인지 시각적으로 강하게 노출 + 마지막 저장 우선`으로 제한한다.
 - 3D 여권은 Workspace 상태 전체를 계속 바라보는 구조가 아니라, `발급 시점의 itinerary snapshot`을 받아 렌더링한다.
@@ -22,13 +24,7 @@
 - `src/types/database.ts`는 현재 `trips`만 정의돼 있으므로, MVP 구현 전에 DB 타입 재생성 또는 수동 확장이 필요하다.
 - 아직 `components/ui`, `store`, `types`의 실제 구현이 거의 없으므로 과도한 리팩터링 없이 초기 구조를 바로 확정할 수 있다.
 
-### 확정 필요
-- 지도 렌더링 라이브러리
-  - 방향은 `Google Maps JavaScript API + React wrapper`로 고정한다.
-  - 다만 실제로 어떤 React 라이브러리를 쓸지는 확정이 필요하다.
-- Google Places 연동 세부 범위
-  - 검색창은 Google Places Autocomplete 기반으로 직접 구현한다.
-  - Place Details / Photo API를 어느 수준까지 함께 쓸지 확정이 필요하다.
+### 남은 정책 결정
 - 공유 권한 모델
   - `/share/[id]`를 완전 공개로 둘지, 로그인 필요 링크로 둘지 결정이 필요하다.
 - 초대 방식
@@ -59,8 +55,8 @@
   - 지도 인터랙션
   - 검색창
   - `@hello-pangea/dnd` 기반 보드
-  - 멀티 커서 오버레이
   - Realtime presence subscription
+  - 현재 작업 대상 오버레이
 - 3D Passport viewer
   - Three.js canvas
   - orbit control
@@ -139,7 +135,7 @@
 - 장소 검색과 지도 표시를 연결한다.
 
 ### Epic 5. Realtime Collaboration
-- presence, cursor, card editing state, card 이동 동기화를 붙인다.
+- presence, 현재 작업 대상 표시, card editing state, card 이동 동기화를 붙인다.
 
 ### Epic 6. 3D Passport Export + Share
 - 3D 여권 결과 렌더링, 다운로드, 읽기 전용 공유를 구현한다.
@@ -310,7 +306,7 @@
   - `trip_items`, `trip_members` 기준 DB 타입 확장
   - UI용 `BoardColumn`, `TripPlaceCard`, `WorkspaceSnapshot` 타입 정의
   - 카드 row에 필요한 필드 고정
-    - `id`, `trip_id`, `place_id`, `name`, `address`, `lat`, `lng`, `image_url`, `note`, `list_type`, `day_index`, `order_index`, `created_by`, `updated_at`
+    - `id`, `trip_id`, `place_id`, `name`, `address`, `lat`, `lng`, `image_url`, `note`, `list_type`, `trip_day_id`, `order_index`, `created_by`, `updated_at`
 - 관련 파일/폴더
   - `src/types/database.ts`
   - `src/types/workspace.ts`
@@ -368,7 +364,7 @@
     - 저장 상태 표시
   - `workspace-presence-store`에 다음 상태를 둔다.
     - 접속 중 유저 목록
-    - 원격 커서 위치
+    - 현재 작업 중인 대상
     - 카드 편집 중 사용자
   - 서버 영속 데이터 자체는 중첩 배열로 들고 가지 않고, `initialSnapshot -> normalized board state + optimistic patch` 수준으로 관리한다.
 - 관련 파일/폴더
@@ -376,7 +372,7 @@
   - `src/store/workspace-ui-store.ts`
   - `src/store/workspace-presence-store.ts`
 - 필요한 상태/타입
-  - `BoardColumnEntity`, `BoardCardEntity`, `SaveIndicatorState`, `RemoteCursor`, `EditingPresenceMap`, `PresenceUser`
+  - `BoardColumnEntity`, `BoardCardEntity`, `SaveIndicatorState`, `ActiveTargetState`, `EditingPresenceMap`, `PresenceUser`
 - Supabase 연동 필요 여부
   - 아니오
 - 선행조건
@@ -507,17 +503,13 @@
 - 목적
   - Google Maps JavaScript API의 지도 캔버스를 React 컴포넌트로 안정적으로 렌더링할 기반을 먼저 만든다.
 - 작업 내용
-  - Google Maps React 라이브러리 선정
-    - 선정 기준
-      - Next.js App Router + client component 환경에서 안정적으로 동작할 것
-      - Places library, marker, polyline 같은 후속 기능과 자연스럽게 연결될 것
-      - React 상태와 지도 상태를 동기화하기 쉬울 것
-      - 라이선스/유지보수 리스크가 낮을 것
-    - 현재 우선 후보
+  - Google Maps React 라이브러리 적용
+    - 선정 결과
       - `@vis.gl/react-google-maps`
-      - `@react-google-maps/api`
-    - 현재 권장안
-      - `@vis.gl/react-google-maps`
+    - 기준
+      - Next.js App Router + client component 환경에서 안정적으로 동작
+      - Places library, marker, polyline 같은 후속 기능과 자연스럽게 연결
+      - React 상태와 지도 상태를 동기화하기 쉬움
   - API key/env 연결
   - 기본 지도 캔버스 렌더링
   - 초기 center/zoom, 로딩/에러 fallback 정의
@@ -535,7 +527,7 @@
 - 난이도
   - 중
 - 리스크
-  - React wrapper 선택이 늦어지면 이후 검색/마커/지도-보드 연동 코드가 흔들릴 수 있다.
+  - Google Maps API key / Map ID 설정이 맞지 않으면 초기 렌더와 marker 기능이 흔들릴 수 있다.
 - 완료 조건
   - Workspace에서 Google Maps 기반 지도 캔버스가 안정적으로 렌더링된다.
 
@@ -545,6 +537,7 @@
 - 작업 내용
   - `PlaceSearchAdapter` 인터페이스 정의
   - Google Places Autocomplete / Place Details 응답을 공통 `PlaceSearchResult`로 normalize
+  - 상위 검색 결과에는 Place Details를 추가 조회해 `imageUrl`, `rating`, `ratingCount`를 붙인다.
   - mock adapter와 실제 adapter 교체 가능 구조 작성
 - 관련 파일/폴더
   - `src/features/map/lib/place-search-adapter.ts`
@@ -567,10 +560,12 @@
   - 사용자가 장소를 검색하고 `장소 바구니` 또는 특정 `Day`에 추가하는 경로를 완성한다.
 - 작업 내용
   - React 기반 검색 input, debounce, 결과 dropdown, 로딩/빈 상태 구현
-  - 검색창은 앱이 직접 렌더링하고 Google Places Autocomplete와 연결
+  - 검색창은 지도 위 고정 overlay input으로 렌더링하고 결과 패널을 바로 아래에 연다.
+  - 검색 결과는 썸네일, 이름, 주소, 별점 정보를 표시한다.
   - 검색 결과를 `trip_items`의 bucket 항목으로 insert
   - 검색 결과를 특정 `Day`의 `trip_items`로 바로 insert하는 경로 추가
-  - `장소 바구니에 추가` / `Day에 바로 추가` 선택 UI 정의
+  - 검색 결과 row 선택 후 `장소바구니` 또는 `Day` 버튼을 눌러 즉시 추가하는 UI를 사용한다.
+  - 장소 추가 후 검색어와 검색 결과는 유지한다.
 - 관련 파일/폴더
   - `src/features/workspace/components/place-search-bar.tsx`
   - `src/features/workspace/components/place-search-results.tsx`
@@ -622,16 +617,20 @@
 
 #### Task 5-1. Realtime 채널 구조 정의
 - 목적
-  - 어떤 정보는 broadcast/presence로, 어떤 정보는 DB subscription으로 받을지 고정한다.
+  - 어떤 정보는 presence/broadcast로, 어떤 정보는 DB subscription으로 받을지 고정한다.
+  - raw cursor 좌표 대신 `현재 작업 대상(card/column/place)` 표시 모델을 확정한다.
 - 작업 내용
-  - trip 단위 채널 네이밍 규칙 정의: `trip:{tripId}`
-  - presence, cursor, editing-lock, transient drag 상태 payload 타입 정의
+  - trip 단위 채널 네이밍 규칙 정의: `workspace:{tripId}`
+  - `/workspace/demo`는 `anonymous auth` 세션으로 Realtime에 참여시키고, `workspace:demo` topic 접근 정책을 별도로 둔다.
+  - `TripMemberRole`은 `owner | editor`로 유지하고, `demo`는 앱 레벨 `WorkspaceRole`로만 취급한다.
+  - presence, active-target, editing-lock, transient drag 상태 payload 타입 정의
   - `postgres_changes` 대상 테이블 정의: `trip_items`, `trip_members`
 - 관련 파일/폴더
   - `src/types/realtime.ts`
   - `src/features/workspace/lib/realtime-channel.ts`
+  - `docs/workspace-realtime-design.md`
 - 필요한 상태/타입
-  - `TripPresenceState`, `CursorBroadcastPayload`, `CardEditPresencePayload`
+  - `TripPresenceState`, `WorkspaceTargetBroadcastPayload`, `CardEditPresencePayload`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
@@ -642,6 +641,7 @@
   - payload shape가 늦게 바뀌면 클라이언트 처리 코드가 연쇄 수정된다.
 - 완료 조건
   - Realtime 메시지 스펙과 테이블 구독 범위가 문서화/코드화된다.
+  - raw cursor 대신 target-based presence를 쓴다는 기준이 문서로 고정된다.
 
 #### Task 5-2. Presence와 접속자 아바타 구현
 - 목적
@@ -649,7 +649,7 @@
 - 작업 내용
   - Supabase presence join/leave
   - 헤더 avatar stack, tooltip, 현재 보고 있는 day 정도의 메타데이터 반영
-  - 사용자별 고유 color를 cursor, avatar ring, card editing pill과 동일하게 사용한다.
+  - 사용자별 고유 color를 avatar ring, active target, card editing pill과 동일하게 사용한다.
   - presence dot은 사용하지 않고 아바타 상태로 표현한다.
     - `online`: 기본 색상 ring
     - `away`: opacity 감소
@@ -672,19 +672,19 @@
 - 완료 조건
   - 동일 trip에 접속한 사용자가 헤더에 실시간으로 나타나고 사라진다.
 
-#### Task 5-3. 커서 동기화 구현
+#### Task 5-3. 현재 작업 대상 동기화 구현
 - 목적
   - 같은 화면 안에서 협업 존재감을 시각적으로 전달한다.
 - 작업 내용
-  - 보드/지도 영역 좌표를 기준으로 커서 broadcast
-  - 50~80ms throttle
-  - 2초 무동작 시 커서 fade 처리
+  - 카드/컬럼/장소 단위 active-target broadcast
+  - hover/selection/dragging 상태를 throttle 또는 debounce 기준으로 전송
+  - timeout 시 대상 강조 해제
 - 관련 파일/폴더
-  - `src/features/workspace/hooks/use-cursor-broadcast.ts`
-  - `src/features/workspace/components/cursor-layer.tsx`
+  - `src/features/workspace/hooks/use-target-broadcast.ts`
+  - `src/features/workspace/components/collaboration-layer.tsx`
   - `src/store/workspace-presence-store.ts`
 - 필요한 상태/타입
-  - `RemoteCursor`, `CursorViewportScope`
+  - `ActiveTargetState`, `WorkspaceTargetBroadcastPayload`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
@@ -692,9 +692,9 @@
 - 난이도
   - 중
 - 리스크
-  - 스크롤 컨테이너 좌표계 보정이 틀리면 커서 위치가 어긋난다.
+  - hover 이벤트를 너무 자주 보내면 노이즈가 커질 수 있다.
 - 완료 조건
-  - 원격 사용자의 커서와 이름 라벨이 보드/지도 영역에 실시간으로 표시된다.
+  - 원격 사용자가 현재 보고 있거나 드래그 중인 카드/컬럼/장소가 실시간으로 표시된다.
 
 #### Task 5-4. 카드 편집 상태와 충돌 경고 구현
 - 목적
@@ -703,7 +703,7 @@
   - 카드 focus 시 editing presence broadcast
   - focus 해제 또는 heartbeat timeout 시 해제
   - 카드 테두리 색, 이름 pill, 상단 alert 반영
-  - 카드 편집 pill 색상은 해당 사용자의 cursor/avatar 색상과 동일하게 유지한다.
+  - 카드 편집 pill 색상은 해당 사용자의 avatar/active target 색상과 동일하게 유지한다.
 - 관련 파일/폴더
   - `src/features/workspace/hooks/use-card-edit-presence.ts`
   - `src/features/workspace/components/place-card.tsx`
@@ -851,7 +851,7 @@
 - `trip_items`
   - `id`, `trip_id`
   - 장소 메타데이터: `place_id`, `name`, `address`, `lat`, `lng`, `image_url`
-  - 보드 상태: `list_type`, `day_index`, `order_index`
+  - 보드 상태: `list_type`, `trip_day_id`, `order_index`
   - 메모 상태: `note`
   - 메타: `created_by`, `updated_at`
 
@@ -866,7 +866,7 @@
   - export modal open/close
 - `workspace-presence-store`
   - 현재 접속자 목록
-  - remote cursor 좌표
+  - 현재 작업 중인 카드/컬럼/장소 target
   - 카드별 편집 중 사용자
   - 일시적인 remote drag 상태
   - 각 접속자별 `color`, `status` 메타데이터
@@ -934,7 +934,7 @@ type PassportStampItem = {
 
 ### 왜 이렇게 나누는가
 - 보드의 진짜 소스 오브 트루스는 `trip_items`다. 그래야 새로고침, 공유, 3D export가 모두 같은 데이터를 읽는다.
-- presence/cursor/editing은 영속할 필요가 없으므로 DB에 저장하지 않는다. Supabase channel presence/broadcast로 끝내는 편이 맞다.
+- presence/active target/editing은 영속할 필요가 없으므로 DB에 저장하지 않는다. Supabase channel presence/broadcast로 끝내는 편이 맞다.
 - UI 상태를 DB에 섞지 않으면 optimistic update 롤백이 단순해진다.
 
 ## 섹션 6: Realtime Integration Plan
@@ -943,7 +943,7 @@ type PassportStampItem = {
 - 채널 이름
   - `trip:{tripId}`
 
-### presence, cursor, card lock, cursor sync 분리 기준
+### presence, target sync, card lock, data sync 분리 기준
 
 #### 1. Presence
 - 용도
@@ -956,15 +956,15 @@ type PassportStampItem = {
   - join, leave, day filter 변경
   - 상태 payload는 `userId`, `displayName`, `color`, `status`를 포함한다.
 
-#### 2. Cursor Sync
+#### 2. Target Sync
 - 용도
-  - 보드/지도에서 원격 커서 위치 표시
+  - 보드/지도에서 원격 사용자의 현재 작업 대상 표시
 - 전송 방식
   - channel `broadcast`
 - 저장 위치
   - DB 저장 없음
 - 갱신 트리거
-  - pointer move를 50~80ms throttle
+  - card hover, selection, drag start/end, place focus
 
 #### 3. Card Lock / Editing Presence
 - 용도
@@ -1002,14 +1002,14 @@ type PassportStampItem = {
 4. 다른 클라이언트는 note update row를 받아 카드 갱신
 
 #### 드래그 존재감
-1. drag start 시 `editing/dragging` broadcast
-2. 원격 클라이언트는 해당 카드를 반투명 처리하고 이름 pill 표시
-3. drop/end 시 dragging 해제
+1. drag start 시 `editing/dragging target` broadcast
+2. 원격 클라이언트는 해당 카드에 avatar, outline, shadow를 표시
+3. drop/end 시 dragging 상태 해제
 
 ### 구현상 주의점
 - `postgres_changes`가 늦게 도착해도 로컬 낙관적 상태와 충돌하지 않도록 `updated_at` 기준 최신 row를 우선한다.
 - 같은 사용자가 여러 탭을 열 경우 presence key를 `userId + tabId`로 둔다.
-- 커서 좌표는 viewport 절대값이 아니라 `container-relative coordinates`로 보내야 한다.
+- MVP에서는 raw cursor 좌표를 보내지 않고, `cardId / columnId / placeId` 같은 domain target만 broadcast한다.
 
 ## 섹션 7: Risks and Tradeoffs
 
@@ -1031,7 +1031,7 @@ type PassportStampItem = {
 - 데스크톱 우선
   - Workspace split layout
   - full DnD
-  - 멀티 커서
+  - 현재 작업 대상 표시
 - 모바일 우선
   - Share 페이지
   - Export modal
@@ -1052,7 +1052,7 @@ type PassportStampItem = {
 8. Realtime presence
 9. 카드 편집 상태와 충돌 경고
 10. `trip_items` 구독 기반 실시간 동기화
-11. Realtime cursor
+11. 현재 작업 대상 표시
 12. Passport render data builder
 13. Export Modal + 3D viewer
 14. PNG 다운로드
@@ -1060,7 +1060,7 @@ type PassportStampItem = {
 
 ### 이 순서를 권장하는 이유
 - `trip_items` 저장 모델이 먼저 고정돼야 보드, 지도, export가 같은 데이터를 볼 수 있다.
-- 지도 좌표계를 함께 쓰는 커서 동기화는 실제 지도 surface가 붙은 뒤 진행하는 편이 안전하다.
+- 지도와 보드에 걸친 현재 작업 대상 표시는 실제 지도 surface가 붙은 뒤 진행하는 편이 안전하다.
 - Realtime은 기본 편집이 끝난 뒤 붙여야 디버깅 범위를 줄일 수 있다.
 - 3D viewer는 데이터 모델이 안정된 뒤 구현해야 재작업이 적다.
 - Share 화면은 Export 결과를 재사용하므로 가장 마지막에 붙이는 편이 효율적이다.

@@ -23,12 +23,11 @@ export function WorkspaceColumn({
     <div
       className={
         isBucket
-          ? "order-last flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl border-[1.5px] border-dashed border-[color:var(--color-col-border)] bg-[color:var(--color-bg-card)] xl:order-none"
-          : "flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl border-[1.5px] border-[color:var(--color-border-card-subtle)] bg-[color:var(--color-bg-card)]"
+          ? "order-last flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-dashed border-[color:var(--color-col-border)] bg-card-surface xl:order-none"
+          : "flex h-full w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-border-card-token bg-card-surface"
       }
-      style={undefined}
     >
-      <div className="bg-[color:var(--color-bg-page)]/80 p-4 pb-3">
+      <div className="bg-card-surface p-4 pb-3">
         <div className="flex items-center justify-between">
           <div className="flex min-w-0 items-center gap-2">
             {!isBucket ? (

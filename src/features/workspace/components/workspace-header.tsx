@@ -43,12 +43,12 @@ export function WorkspaceHeader({
       <div className="flex h-18 items-center justify-between gap-4 px-6">
         <div className="flex min-w-0 items-center gap-6">
           <Link href="/trips" className="flex items-center gap-2">
-            <Plane className="size-6 -rotate-12 text-[color:var(--color-primary)]" />
-            <span className="text-xl font-bold text-[color:var(--foreground)]">SyncTrip</span>
+            <Plane className="size-6 -rotate-12 text-primary" />
+            <span className="text-xl font-bold text-foreground">SyncTrip</span>
           </Link>
-          <div className="hidden h-6 w-px bg-[color:var(--line)] md:block" />
-          <p className="truncate text-xl font-semibold text-[color:var(--foreground)]">{trip.title}</p>
-          <span className="hidden text-sm text-[color:var(--muted-foreground)] md:block">
+          <div className="hidden h-6 w-px bg-line-token md:block" />
+          <p className="truncate text-xl font-semibold text-foreground">{trip.title}</p>
+          <span className="hidden text-sm text-muted-foreground md:block">
             {trip.startDate} ~ {trip.endDate}
           </span>
         </div>

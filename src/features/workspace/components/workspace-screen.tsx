@@ -5,7 +5,10 @@ import { MapShell } from "@/features/map/components/map-shell";
 import { WorkspaceBoard } from "@/features/workspace/components/workspace-board";
 import { WorkspaceHeader } from "@/features/workspace/components/workspace-header";
 import { useHydrateWorkspaceStores } from "@/features/workspace/hooks/use-hydrate-workspace-stores";
+import { useWorkspacePresence } from "@/features/workspace/hooks/use-workspace-presence";
 import { useWorkspaceBoardStore } from "@/store/workspace-board-store";
+import { useWorkspacePresenceStore } from "@/store/workspace-presence-store";
+import { collaborationColorTokens } from "@/lib/collaboration-colors";
 import type { WorkspaceActor, WorkspaceSnapshot } from "@/types/workspace";
 
 export function WorkspaceScreen({
@@ -18,11 +21,17 @@ export function WorkspaceScreen({
   actor: WorkspaceActor;
 }) {
   useHydrateWorkspaceStores(snapshot);
+  useWorkspacePresence({
+    tripId,
+    members: snapshot.members,
+    currentUser: actor.user,
+  });
 
   const trip = useWorkspaceBoardStore((state) => state.trip);
   const columnOrder = useWorkspaceBoardStore((state) => state.columnOrder);
   const columnsById = useWorkspaceBoardStore((state) => state.columnsById);
   const cardsById = useWorkspaceBoardStore((state) => state.cardsById);
+  const presenceUsers = useWorkspacePresenceStore((state) => state.users);
 
   const boardTrip = trip ?? snapshot.trip;
   const columns = columnOrder
@@ -30,19 +39,31 @@ export function WorkspaceScreen({
     .filter((column): column is NonNullable<typeof column> => Boolean(column));
   const cards = Object.values(cardsById).length > 0 ? Object.values(cardsById) : snapshot.cards;
   const collaborators = useMemo(
-    () =>
-      snapshot.members.map((member, index) => {
+    () => {
+      const activeUsers = presenceUsers
+        .filter((member) => member.status !== "offline")
+        .sort((left, right) => left.userId.localeCompare(right.userId));
+
+      return activeUsers.map((member, index) => {
         const isCurrentUser = member.userId === actor.user?.id;
+        const demoName =
+          actor.role === "demo" ? `Demo User ${index + 1}` : `E${index + 1}`;
+
         return {
           id: member.userId,
-          name: isCurrentUser
-            ? actor.user?.fullName ?? actor.user?.email ?? "ME"
-            : `E${index + 1}`,
+          name:
+            actor.role === "demo"
+              ? demoName
+              : isCurrentUser
+                ? actor.user?.fullName ?? actor.user?.email ?? demoName
+                : demoName,
           src: isCurrentUser ? actor.user?.avatarUrl ?? undefined : undefined,
-          status: "editing" as const,
+          color: collaborationColorTokens[index % collaborationColorTokens.length],
+          status: member.status === "away" ? ("away" as const) : ("editing" as const),
         };
-      }),
-    [actor.user, snapshot.members]
+      });
+    },
+    [actor.role, actor.user, presenceUsers]
   );
 
   return (
