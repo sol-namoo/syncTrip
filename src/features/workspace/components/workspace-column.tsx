@@ -6,19 +6,31 @@ import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { getDayTokens } from "@/features/workspace/lib/day-tokens";
 import { PlaceCard } from "@/features/workspace/components/place-card";
 import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
-import type { BoardColumnEntity, BoardCardEntity } from "@/types/workspace";
+import type {
+  BoardColumnEntity,
+  BoardCardEntity,
+  CardLockMap,
+} from "@/types/workspace";
 
 export function WorkspaceColumn({
   column,
   cards,
   participants,
   cardParticipantsById,
+  cardLocksById,
+  currentUserId,
+  canEditItems,
+  onBroadcastEditingState,
   registerCardElement,
 }: {
   column: BoardColumnEntity;
   cards: BoardCardEntity[];
   participants: AvatarStackUser[];
   cardParticipantsById: Record<string, AvatarStackUser[]>;
+  cardLocksById: CardLockMap;
+  currentUserId?: string;
+  canEditItems: boolean;
+  onBroadcastEditingState: (args: { state: "start" | "end"; cardId: string }) => void;
   registerCardElement: (cardId: string, element: HTMLDivElement | null) => void;
 }) {
   const isBucket = column.id === "bucket";
@@ -95,7 +107,16 @@ export function WorkspaceColumn({
             <div className="min-h-full">
               <div className="space-y-3">
                 {cards.map((card, index) => (
-                  <Draggable key={card.id} draggableId={card.id} index={index}>
+                  <Draggable
+                    key={card.id}
+                    draggableId={card.id}
+                    index={index}
+                    isDragDisabled={
+                      !canEditItems ||
+                      (Boolean(cardLocksById[card.id]) &&
+                        cardLocksById[card.id]?.userId !== currentUserId)
+                    }
+                  >
                     {(draggableProvided, draggableSnapshot) => (
                       <div {...draggableProvided.draggableProps}>
                         <PlaceCard
@@ -103,6 +124,10 @@ export function WorkspaceColumn({
                           dragHandleProps={draggableProvided.dragHandleProps}
                           isDragging={draggableSnapshot.isDragging}
                           participants={cardParticipantsById[card.id] ?? []}
+                          cardLock={cardLocksById[card.id]}
+                          currentUserId={currentUserId}
+                          canEditItems={canEditItems}
+                          onBroadcastEditingState={onBroadcastEditingState}
                           cardRef={(element) => {
                             draggableProvided.innerRef(element);
                             registerCardElement(card.id, element);

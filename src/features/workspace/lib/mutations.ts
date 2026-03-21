@@ -78,3 +78,29 @@ export async function createTripItem(input: {
     updatedAt: data.updated_at,
   };
 }
+
+export async function updateTripItemNote(input: {
+  itemId: string;
+  note: string;
+}): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("trip_items")
+    .update({
+      note: input.note,
+    })
+    .eq("id", input.itemId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function deleteTripItem(input: { itemId: string }): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase.from("trip_items").delete().eq("id", input.itemId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}

@@ -27,6 +27,7 @@ type WorkspaceBoardState = {
     columnId: BoardColumnId;
     card: TripPlaceCard;
   }) => void;
+  updateCardNote: (cardId: string, note: string) => void;
   moveCard: (input: {
     sourceColumnId: BoardColumnId;
     destinationColumnId: BoardColumnId;
@@ -132,6 +133,25 @@ export const useWorkspaceBoardStore = create<WorkspaceBoardState>((set) => ({
           [columnId]: {
             ...existingColumn,
             cardIds: [...existingColumn.cardIds, card.id],
+          },
+        },
+      };
+    });
+  },
+  updateCardNote: (cardId, note) => {
+    set((state) => {
+      const existingCard = state.cardsById[cardId];
+
+      if (!existingCard) {
+        return state;
+      }
+
+      return {
+        cardsById: {
+          ...state.cardsById,
+          [cardId]: {
+            ...existingCard,
+            note,
           },
         },
       };

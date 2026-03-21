@@ -2,9 +2,8 @@ import { create } from "zustand";
 import type {
   ActiveTargetMap,
   ActiveTargetState,
-  DraggingPresenceMap,
-  DraggingPresenceState,
-  EditingPresenceMap,
+  CardLockMap,
+  CardLockState,
   PresenceUser,
   RemoteCursor,
   WorkspaceMember,
@@ -14,16 +13,15 @@ type WorkspacePresenceState = {
   users: PresenceUser[];
   cursorsByUserId: Record<string, RemoteCursor>;
   activeTargetsByUserId: ActiveTargetMap;
-  draggingByUserId: DraggingPresenceMap;
-  editingByCardId: EditingPresenceMap;
+  cardLocksById: CardLockMap;
   initializeFromMembers: (members: WorkspaceMember[]) => void;
   setUsers: (users: PresenceUser[]) => void;
   setActiveTarget: (userId: string, target: ActiveTargetState | null) => void;
-  setDraggingState: (userId: string, dragging: DraggingPresenceState | null) => void;
+  setCardLock: (cardId: string, lock: CardLockState | null) => void;
+  clearCardLocksForUser: (userId: string) => void;
+  pruneCardLocksToUsers: (userIds: string[]) => void;
   upsertCursor: (cursor: RemoteCursor) => void;
   removeCursor: (userId: string) => void;
-  setEditingUser: (cardId: string, userId: string | null) => void;
-  clearEditingUser: (userId: string) => void;
   reset: () => void;
 };
 
@@ -31,8 +29,7 @@ export const useWorkspacePresenceStore = create<WorkspacePresenceState>((set) =>
   users: [],
   cursorsByUserId: {},
   activeTargetsByUserId: {},
-  draggingByUserId: {},
-  editingByCardId: {},
+  cardLocksById: {},
   initializeFromMembers: (members) => {
     set({
       users: members.map((member) => ({
@@ -60,18 +57,35 @@ export const useWorkspacePresenceStore = create<WorkspacePresenceState>((set) =>
       return { activeTargetsByUserId: next };
     });
   },
-  setDraggingState: (userId, dragging) => {
+  setCardLock: (cardId, lock) => {
     set((state) => {
-      const next = { ...state.draggingByUserId };
+      const next = { ...state.cardLocksById };
 
-      if (!dragging) {
-        delete next[userId];
+      if (!lock) {
+        delete next[cardId];
       } else {
-        next[userId] = dragging;
+        next[cardId] = lock;
       }
 
-      return { draggingByUserId: next };
+      return { cardLocksById: next };
     });
+  },
+  clearCardLocksForUser: (userId) => {
+    set((state) => ({
+      cardLocksById: Object.fromEntries(
+        Object.entries(state.cardLocksById).filter(([, value]) => value.userId !== userId)
+      ),
+    }));
+  },
+  pruneCardLocksToUsers: (userIds) => {
+    const allowed = new Set(userIds);
+    set((state) => ({
+      cardLocksById: Object.fromEntries(
+        Object.entries(state.cardLocksById).filter(([, value]) =>
+          allowed.has(value.userId)
+        )
+      ),
+    }));
   },
   upsertCursor: (cursor) => {
     set((state) => ({
@@ -88,39 +102,12 @@ export const useWorkspacePresenceStore = create<WorkspacePresenceState>((set) =>
       return { cursorsByUserId: next };
     });
   },
-  setEditingUser: (cardId, userId) => {
-    set((state) => {
-      const next = { ...state.editingByCardId };
-
-      if (userId) {
-        next[cardId] = userId;
-      } else {
-        delete next[cardId];
-      }
-
-      return {
-        editingByCardId: next,
-      };
-    });
-  },
-  clearEditingUser: (userId) => {
-    set((state) => {
-      const next = Object.fromEntries(
-        Object.entries(state.editingByCardId).filter(([, value]) => value !== userId)
-      );
-
-      return {
-        editingByCardId: next,
-      };
-    });
-  },
   reset: () => {
     set({
       users: [],
       cursorsByUserId: {},
       activeTargetsByUserId: {},
-      draggingByUserId: {},
-      editingByCardId: {},
+      cardLocksById: {},
     });
   },
 }));
