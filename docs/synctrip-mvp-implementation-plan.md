@@ -3,7 +3,7 @@
 ## 섹션 1: Implementation Summary
 
 ### 디자이너 산출물에서 구현상 중요한 결정
-- MVP의 주 경로는 `로그인 -> 여행 생성 -> Workspace 편집 -> 3D 여권 발급/공유`로 고정한다.
+- MVP의 주 경로는 `로그인 -> 여행 생성 -> Workspace 편집 -> 3D 티켓 발급/공유`로 고정한다.
 - Workspace는 데스크톱 우선이며, `지도 + 칸반 보드`를 동시에 보여주는 2-pane 구조를 유지한다.
 - 장소 검색 결과를 별도 페이지로 보내지 않고, Workspace 내부에서 처리한다.
 - 검색 결과는 `장소 바구니`에 넣을 수도 있고 특정 `Day`에 바로 넣을 수도 있다.
@@ -13,8 +13,8 @@
 - `demo`는 DB 멤버십 role이 아니라 앱 레벨 `WorkspaceRole`로만 취급한다.
 - 카드 자체가 일정의 최소 저장 단위다. 장소 메타데이터, 일자 배치, 정렬 순서, 메모를 모두 카드 row에 둔다.
 - 충돌 해결은 CRDT 대신 `누가 편집 중인지 시각적으로 강하게 노출 + 마지막 저장 우선`으로 제한한다.
-- 3D 여권은 Workspace 상태 전체를 계속 바라보는 구조가 아니라, `발급 시점의 itinerary snapshot`을 받아 렌더링한다.
-- 다운로드 CTA를 공유보다 우선한다. 구현도 `PNG 이미지 다운로드`를 1차 목표로 둔다.
+- 3D 티켓은 Workspace 상태 전체를 계속 바라보는 구조가 아니라, `발급 시점의 itinerary snapshot`을 받아 렌더링한다.
+- 이미지 다운로드는 MVP 범위에서 제외하고, 공유 링크와 OG 이미지 생성을 우선한다.
 - 모바일은 `Share / Export 확인`을 우선하고, Workspace 편집은 읽기 전용 또는 축소된 상호작용으로 제한한다.
 
 ### 현재 코드베이스 기준 해석
@@ -29,8 +29,8 @@
   - `/share/[id]`를 완전 공개로 둘지, 로그인 필요 링크로 둘지 결정이 필요하다.
 - 초대 방식
   - MVP에서 이메일 초대가 필요한지, 링크 복사만으로 충분한지 결정이 필요하다.
-- 3D 다운로드 포맷
-  - 1차는 PNG 캡처로 두고, PDF 또는 다중 해상도 지원은 범위 밖으로 두는지 확인이 필요하다.
+- 공유 링크 모델
+  - 같은 trip이라도 공유자별 메모가 달라질 수 있으므로, 티켓 메모는 URL이 아니라 DB row로 저장하는 방향을 기본으로 둔다.
 
 ## 섹션 2: Architecture Decisions
 
@@ -57,10 +57,10 @@
   - `@hello-pangea/dnd` 기반 보드
   - Realtime presence subscription
   - 현재 작업 대상 오버레이
-- 3D Passport viewer
+- 3D Ticket viewer
   - Three.js canvas
   - orbit control
-  - 이미지 다운로드
+  - 링크 공유용 front/back preview
 
 ### 파일 구조 제안
 
@@ -68,7 +68,7 @@
 - `src/app`
 - `src/features/workspace`
 - `src/features/map`
-- `src/features/passport3d`
+- `src/features/ticket3d`
 - `src/components/ui`
 - `src/lib/supabase`
 - `src/types`
@@ -83,7 +83,7 @@
 - `src/store/trips-store.ts`
 - `src/types/trip.ts`
 - `src/types/workspace.ts`
-- `src/types/passport.ts`
+- `src/types/ticket.ts`
 - `src/types/realtime.ts`
 
 ### 책임 분리 원칙
@@ -137,8 +137,8 @@
 ### Epic 5. Realtime Collaboration
 - presence, 현재 작업 대상 표시, card editing state, card 이동 동기화를 붙인다.
 
-### Epic 6. 3D Passport Export + Share
-- 3D 여권 결과 렌더링, 다운로드, 읽기 전용 공유를 구현한다.
+### Epic 6. 3D Ticket Share + Public Views
+- 3D 티켓 발급, 공유 메모 저장, 공개 티켓 뷰, 읽기 전용 일정 뷰를 구현한다.
 
 ## 섹션 4: Task Breakdown
 
@@ -745,44 +745,55 @@
 - 완료 조건
   - 타 사용자의 카드 추가, 이동, 메모 변경, 삭제가 새로고침 없이 반영된다.
 
-### Epic 6. 3D Passport Export + Share
+### Epic 6. 3D Ticket Share + Public Views
 
-#### Task 6-1. Passport 렌더 입력 데이터 shape 정의
+#### Task 6-1. Ticket render / share 데이터 모델 정의
 - 목적
-  - Three.js 뷰어가 Workspace 내부 상태와 느슨하게 결합되게 만든다.
+  - 3D 티켓 뷰어와 공유 기능이 Workspace 최신 상태를 기준으로 동작하도록 고정된 입력 shape를 만든다.
 - 작업 내용
-  - `PassportRenderData` 타입 정의
-  - trip title, date range, participant count, day 그룹, stamp item 목록으로 shape 고정
-  - Workspace snapshot -> passport render data 변환 함수 작성
+  - `TicketRenderData` 타입 정의
+  - trip title, date range, destination, participant count, 대표 day 요약, 공유 메모를 담는 render shape 설계
+  - Workspace snapshot -> ticket render data 변환 함수 작성
+  - 여행당 하나의 share 설정 모델 정의
+    - `trip_id`
+    - `share_code`
+    - `message`
+    - `og_image_url`
+    - `updated_by`
 - 관련 파일/폴더
-  - `src/types/passport.ts`
-  - `src/features/passport3d/lib/build-passport-data.ts`
+  - `src/types/ticket.ts`
+  - `src/features/ticket3d/lib/build-ticket-data.ts`
+  - `src/features/share/lib/share-ticket.ts`
+  - `supabase/migrations/*create_trip_share_settings*.sql`
 - 필요한 상태/타입
-  - `PassportRenderData`, `PassportStampItem`, `PassportDayGroup`
+  - `TicketRenderData`, `TripShareSettingsRow`, `ReadonlyItinerarySnapshot`
 - Supabase 연동 필요 여부
-  - 아니오
+  - 예
 - 선행조건
   - Task 3-1
 - 난이도
   - 중
 - 리스크
-  - stamp 배치 규칙이 늦게 바뀌면 3D 레이아웃 함수 수정이 필요하다.
+  - 최신 trip 상태를 항상 렌더에 사용하므로, 공유 뷰와 워크스페이스 뷰의 데이터 shape 차이를 명확히 분리해야 한다.
 - 완료 조건
-  - 3D 컴포넌트는 고정된 props shape 하나만 받아 렌더할 수 있다.
+  - 3D 티켓 컴포넌트는 고정된 props shape 하나만 받아 렌더할 수 있다.
 
-#### Task 6-2. Export Modal과 3D Viewer 구현
+#### Task 6-2. Share Modal과 3D Ticket Viewer 구현
 - 목적
-  - Workspace에서 결과물 미리보기를 띄우고 회전 가능한 3D 오브젝트를 보여준다.
+  - Workspace에서 공유 버튼을 누르면 모달 안에서 3D 티켓을 확인하고 링크를 만들 준비를 할 수 있게 한다.
 - 작업 내용
-  - full-screen modal
-  - 좌측 여행 요약, 중앙 canvas, 우측 CTA 패널
-  - Three.js passport model, stamp mesh/text 배치, orbit control
+  - modal 기반 share layout 구현
+  - 중앙 3D ticket canvas + 우측 링크/메모 패널 구성
+  - 앞면/뒷면 전환 가능한 Three.js ticket model
+  - 뒷면 메모 입력 UI
+  - link copy / recipient preview CTA
+  - 공용 OG는 고정 ticket image 하나를 사용하고, modal 안에서는 OG 업로드/생성을 다루지 않는다.
 - 관련 파일/폴더
-  - `src/features/passport3d/components/export-modal.tsx`
-  - `src/features/passport3d/components/passport-viewer.tsx`
-  - `src/features/passport3d/components/passport-scene.tsx`
+  - `src/features/ticket3d/components/share-modal.tsx`
+  - `src/features/ticket3d/components/ticket-viewer.tsx`
+  - `src/features/ticket3d/components/ticket-scene.tsx`
 - 필요한 상태/타입
-  - `ExportModalState`, `PassportRenderData`
+  - `ShareModalState`, `TicketRenderData`
 - Supabase 연동 필요 여부
   - 아니오
 - 선행조건
@@ -790,56 +801,109 @@
 - 난이도
   - 상
 - 리스크
-  - 3D 모델 복잡도를 높이면 모바일/저사양 브라우저에서 급격히 느려진다.
+  - Three.js 캔버스와 모달 입력 UI가 충돌할 수 있다.
 - 완료 조건
-  - Workspace에서 Export Modal을 열고 3D 여권을 회전해 볼 수 있다.
+  - Workspace에서 Share Modal을 열고 3D 티켓을 회전해 보며 메모를 입력할 수 있다.
 
-#### Task 6-3. 이미지 다운로드 구현
+#### Task 6-3. Share ticket 생성 / 저장 / 링크 복사
 - 목적
-  - 현재 보고 있는 3D 결과를 PNG로 저장한다.
+  - 여행당 하나의 share 설정 row에 메모를 저장하고, 짧은 공유 링크를 만들 수 있게 한다.
 - 작업 내용
-  - canvas를 `preserveDrawingBuffer` 또는 offscreen render target 방식으로 캡처
-  - 현재 카메라 각도 기준 PNG 생성
-  - 다운로드 버튼 상태 처리
+  - `trip_share_settings` 1:1 테이블 생성
+  - share code 생성 규칙 정의
+  - share 설정 upsert mutation
+  - link copy / preview link 생성
+  - 공용 OG image 메타데이터 연결
 - 관련 파일/폴더
-  - `src/features/passport3d/hooks/use-passport-download.ts`
-  - `src/features/passport3d/components/export-modal.tsx`
+  - `supabase/migrations/*create_trip_share_settings*.sql`
+  - `src/features/share/lib/mutations.ts`
+  - `src/features/ticket3d/components/share-modal.tsx`
 - 필요한 상태/타입
-  - `DownloadStatus`
-- Supabase 연동 필요 여부
-  - 아니오
-- 선행조건
-  - Task 6-2
-- 난이도
-  - 중
-- 리스크
-  - 브라우저별 캔버스 캡처 품질 차이가 있다.
-- 완료 조건
-  - 사용자가 PNG 이미지 파일을 다운로드할 수 있다.
-
-#### Task 6-4. 읽기 전용 Share 화면 구현
-- 목적
-  - 링크 공유 대상이 3D 결과를 모바일 포함 환경에서 확인하게 한다.
-- 작업 내용
-  - 서버에서 trip snapshot fetch
-  - read-only share shell + 3D viewer + 다운로드 CTA
-  - 로그인 여부와 무관한 접근 정책 반영
-- 관련 파일/폴더
-  - `src/app/share/[id]/page.tsx`
-  - `src/features/passport3d/components/share-screen.tsx`
-  - `src/features/passport3d/lib/queries.ts`
-- 필요한 상태/타입
-  - `SharePageSnapshot`
+  - `TripShareSettingsRow`, `ShareCode`, `CreateTripShareSettingsInput`
 - Supabase 연동 필요 여부
   - 예
 - 선행조건
-  - 공유 권한 모델 확정, Task 6-1
+  - Task 6-1, Task 6-2
 - 난이도
   - 중
 - 리스크
-  - 공개 링크 정책이 바뀌면 접근 제어 로직이 달라진다.
+  - share code 재생성 정책과 메모 수정 정책을 분리하지 않으면 링크 안정성이 깨질 수 있다.
 - 완료 조건
-  - 공유 링크로 3D 결과를 확인하고 다운로드할 수 있다.
+  - 사용자가 여행당 하나의 티켓 메모를 저장하고, 안정적인 공유 링크를 복사할 수 있다.
+
+#### Task 6-4. 공유받은 사용자용 공개 3D Ticket 뷰 구현
+- 목적
+  - 링크로 받은 사용자가 로그인 없이 3D 티켓을 보고 뒷면 메모를 확인할 수 있게 한다.
+- 작업 내용
+  - public share shell 구현
+  - 티켓 클릭/드래그로 앞뒷면 전환
+  - 공유자 메모 표시
+  - 일정 보기 전용 뷰로 이동하는 CTA 제공
+  - 앱 내부 레이아웃과 분리된 몰입형 landing 스타일 적용
+- 관련 파일/폴더
+  - `src/app/share/[id]/page.tsx`
+  - `src/features/ticket3d/components/share-screen.tsx`
+  - `src/features/share/lib/queries.ts`
+- 필요한 상태/타입
+  - `PublicTicketPageData`
+- Supabase 연동 필요 여부
+  - 예
+- 선행조건
+  - Task 6-3
+- 난이도
+  - 중
+- 리스크
+  - 공개 링크 정책과 OG generation 경로를 같이 맞춰야 한다.
+- 완료 조건
+  - 로그인 없이도 read-only 3D 티켓과 공유 메모를 확인할 수 있다.
+
+#### Task 6-5. 일정 보기 전용 뷰 구현
+- 목적
+  - 편집 권한 없이 완성된 여행 계획을 탐색하는 전용 화면을 제공한다.
+- 작업 내용
+  - `/share/[id]/itinerary` 또는 동등한 read-only itinerary route 정의
+  - 상단 day filter + 지도 + 일렬 itinerary list를 읽기 전용으로만 노출
+  - Workspace와 분리된 view-only shell 구성
+  - 향후 mobile/tablet 리팩터링과 호환되도록, day filter 기반 단일-pane 탐색 레이아웃을 우선 적용
+- 관련 파일/폴더
+  - `src/app/share/[id]/itinerary/page.tsx`
+  - `src/features/share/components/readonly-itinerary-screen.tsx`
+- 필요한 상태/타입
+  - `ReadonlyItinerarySnapshot`
+- Supabase 연동 필요 여부
+  - 예
+- 선행조건
+  - Task 6-4
+- 난이도
+  - 중
+- 리스크
+  - Workspace 컴포넌트를 그대로 재사용하면 edit affordance 제거 누락 위험이 있다.
+- 완료 조건
+  - 공유받은 사용자가 편집 기능 없이 완성된 여행 계획을 탐색할 수 있다.
+
+#### Task 6-6. Public Share / Read-only 레이아웃 설계 정리
+- 목적
+  - 공유 티켓 뷰와 읽기 전용 itinerary 뷰가 Workspace 축소판이 아니라 탐색 목적에 맞는 전용 레이아웃을 갖도록 한다.
+- 작업 내용
+  - Public Ticket View의 몰입형 단일 캔버스 레이아웃 정의
+  - Read-only itinerary의 day filter 상호작용 정의
+  - mobile에서 horizontal multi-column 대신 day filter + vertical list를 기본 패턴으로 정리
+  - Epic 7 초대 요청 CTA가 나중에 들어갈 자리까지 고려해 header/footer action area 설계
+- 관련 파일/폴더
+  - `docs/synctrip-mvp-design.md`
+  - `docs/synctrip-mvp-implementation-plan.md`
+- 필요한 상태/타입
+  - 없음
+- Supabase 연동 필요 여부
+  - 아니오
+- 선행조건
+  - Task 6-1
+- 난이도
+  - 하
+- 리스크
+  - Workspace 재사용 욕심이 과하면 read-only 탐색성이 떨어질 수 있다.
+- 완료 조건
+  - Public ticket view와 read-only itinerary view의 레이아웃 기준이 문서와 구현에서 일관되게 설명된다.
 
 ## 섹션 5: State Model
 
@@ -897,38 +961,29 @@
 - 페이지 최초 렌더에 필요한 trip snapshot
 - 접근 권한 여부
 
-### 3D Passport props/data shape
+### 3D Ticket props/data shape
 
 ```ts
-type PassportRenderData = {
+type TicketRenderData = {
+  shareCode?: string;
   tripId: string;
   title: string;
   startDate: string | null;
   endDate: string | null;
   participantCount: number;
-  coverCityLabel: string;
-  days: PassportDayGroup[];
-  stamps: PassportStampItem[];
+  destinationLabel: string;
+  summaryDays: TicketDaySummary[];
+  authorMessage: string | null;
+  sharedByName: string | null;
+  issuedAt: string;
 };
 
-type PassportDayGroup = {
+type TicketDaySummary = {
   dayIndex: number;
   colorToken: string;
-  places: {
-    cardId: string;
-    name: string;
-    cityLabel: string | null;
-  }[];
-};
-
-type PassportStampItem = {
-  id: string;
-  dayIndex: number;
-  label: string;
-  subLabel?: string | null;
-  colorToken: string;
-  position: { x: number; y: number; rotation: number };
-  emphasis: "hero" | "normal" | "micro";
+  title: string | null;
+  placeCount: number;
+  heroPlaceName: string | null;
 };
 ```
 

@@ -141,6 +141,36 @@ export type Database = {
         };
         Relationships: [];
       };
+      trip_share_settings: {
+        Row: {
+          trip_id: string;
+          share_code: string;
+          message: string;
+          og_image_url: string | null;
+          updated_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          trip_id: string;
+          share_code: string;
+          message?: string;
+          og_image_url?: string | null;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          trip_id?: string;
+          share_code?: string;
+          message?: string;
+          og_image_url?: string | null;
+          updated_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

@@ -224,5 +224,30 @@
 - optimistic update 허용 범위
 - `trip_items` 설계 원칙
 - 서버 컴포넌트와 클라이언트 컴포넌트 분리 기준
-- 3D passport용 데이터 shape 기준
+- 3D ticket share용 데이터 shape 기준
 - JavaScript 모듈, 싱글톤, 라이브러리 내부 공유 상태 구조
+
+## 9. Browser APIs
+
+### 9.1. Web Crypto API
+
+- 브라우저와 최신 JS 런타임에는 `crypto`라는 전역 Web Crypto API가 있다.
+- 별도 npm 라이브러리를 설치하지 않아도 `crypto.getRandomValues()`로 안전한 랜덤 바이트를 만들 수 있다.
+- SyncTrip에서는 공유 링크용 `share_code`를 만들 때 이 API를 쓴다.
+
+예시:
+
+```ts
+const randomBytes = crypto.getRandomValues(new Uint8Array(length));
+const code = Array.from(
+  randomBytes,
+  (value) => alphabet[value % alphabet.length]
+).join("");
+```
+
+- 위 흐름은:
+  - 길이 `length`의 바이트 배열 생성
+  - 각 칸을 랜덤한 0~255 값으로 채움
+  - 각 바이트를 알파벳 인덱스로 매핑
+  - 최종 문자열로 join
+- 즉 `share_code` 같은 짧은 랜덤 식별자를 만들 때 Node 전용 `crypto` import 없이도 처리할 수 있다.
