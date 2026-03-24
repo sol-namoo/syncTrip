@@ -28,6 +28,11 @@ type WorkspaceBoardState = {
     card: TripPlaceCard;
   }) => void;
   updateColumnTitle: (columnId: BoardColumnId, title: string) => void;
+  updateTripMeta: (input: {
+    title: string;
+    destination: string | null;
+    destinations: WorkspaceTrip["destinations"];
+  }) => void;
   updateCardNote: (cardId: string, note: string) => void;
   moveCard: (input: {
     sourceColumnId: BoardColumnId;
@@ -154,6 +159,22 @@ export const useWorkspaceBoardStore = create<WorkspaceBoardState>((set) => ({
             ...existingColumn,
             title,
           },
+        },
+      };
+    });
+  },
+  updateTripMeta: ({ title, destination, destinations }) => {
+    set((state) => {
+      if (!state.trip) {
+        return state;
+      }
+
+      return {
+        trip: {
+          ...state.trip,
+          title,
+          destination,
+          destinations,
         },
       };
     });

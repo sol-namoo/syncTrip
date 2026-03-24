@@ -752,14 +752,17 @@
   - 3D 티켓 뷰어와 공유 기능이 Workspace 최신 상태를 기준으로 동작하도록 고정된 입력 shape를 만든다.
 - 작업 내용
   - `TicketRenderData` 타입 정의
-  - trip title, date range, destination, participant count, 대표 day 요약, 공유 메모를 담는 render shape 설계
+  - trip title, date range, destination route, participant count, 대표 day 요약, 공유 메모를 담는 render shape 설계
   - Workspace snapshot -> ticket render data 변환 함수 작성
   - 여행당 하나의 share 설정 모델 정의
     - `trip_id`
     - `share_code`
     - `message`
-    - `og_image_url`
     - `updated_by`
+  - 목적지 모델 보수적 확장
+    - `trips.destination`은 유지
+    - `trips.destinations jsonb`를 추가해 다도시 route를 저장
+    - 생성 UI는 기존 대표 목적지 입력을 유지하고, 선택적으로 `도시, 국가` 목록을 추가 입력받는다
 - 관련 파일/폴더
   - `src/types/ticket.ts`
   - `src/features/ticket3d/lib/build-ticket-data.ts`
@@ -777,6 +780,7 @@
   - 최신 trip 상태를 항상 렌더에 사용하므로, 공유 뷰와 워크스페이스 뷰의 데이터 shape 차이를 명확히 분리해야 한다.
 - 완료 조건
   - 3D 티켓 컴포넌트는 고정된 props shape 하나만 받아 렌더할 수 있다.
+  - `trips.destinations`가 비어 있어도 기존 `destination` fallback으로 route를 렌더할 수 있다.
 
 #### Task 6-2. Share Modal과 3D Ticket Viewer 구현
 - 목적
@@ -813,7 +817,7 @@
   - share code 생성 규칙 정의
   - share 설정 upsert mutation
   - link copy / preview link 생성
-  - 공용 OG image 메타데이터 연결
+  - 공용 OG image는 `public/og-ticket.png` 고정 자산을 사용한다
 - 관련 파일/폴더
   - `supabase/migrations/*create_trip_share_settings*.sql`
   - `src/features/share/lib/mutations.ts`
@@ -830,6 +834,29 @@
   - share code 재생성 정책과 메모 수정 정책을 분리하지 않으면 링크 안정성이 깨질 수 있다.
 - 완료 조건
   - 사용자가 여행당 하나의 티켓 메모를 저장하고, 안정적인 공유 링크를 복사할 수 있다.
+
+#### Task 6-1A. Trip destinations 보수 확장 영향 범위 정리
+- 목적
+  - 티켓 route와 이후 공개 itinerary를 위해 다도시 목적지 모델을 추가하되, 기존 단일 목적지 흐름은 유지한다.
+- 작업 내용
+  - migration: `trips.destinations jsonb` 추가, `create_trip_with_owner` RPC 인자 확장
+  - 타입: `Database`, `WorkspaceTrip`, `TripListItem`, `CreateTripInput` 확장
+  - 생성 UI: 새 여행 만들기 dialog에 선택적 목적지 목록 입력 추가
+  - 렌더: 티켓 route는 `destinations` 우선, 없으면 `destination` fallback
+- 관련 파일/폴더
+  - `supabase/migrations/*add_trip_destinations*.sql`
+  - `src/types/database.ts`
+  - `src/types/trip.ts`
+  - `src/types/workspace.ts`
+  - `src/features/trips/components/create-trip-dialog.tsx`
+  - `src/features/trips/lib/mutations.ts`
+  - `src/features/trips/lib/queries.ts`
+  - `src/features/workspace/lib/queries.ts`
+  - `src/features/ticket3d/lib/build-ticket-data.ts`
+- 리스크
+  - 목적지 목록 입력 형식이 너무 복잡하면 MVP 생성 UX가 무거워질 수 있다.
+- 완료 조건
+  - 기존 여행 생성은 그대로 가능하고, 다도시 목적지 입력 시 ticket route에 반영된다.
 
 #### Task 6-4. 공유받은 사용자용 공개 3D Ticket 뷰 구현
 - 목적

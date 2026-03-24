@@ -3,6 +3,7 @@ import "server-only";
 import dayjs from "dayjs";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
+import type { TripDestination } from "@/types/trip";
 import type {
   BoardColumn,
   TripPlaceCard,
@@ -13,8 +14,9 @@ import type {
 
 type TripSelect = Pick<
   Database["public"]["Tables"]["trips"]["Row"],
-  "id" | "title" | "destination" | "start_date" | "end_date" | "created_at" | "updated_at"
+  "id" | "title" | "destination" | "destinations" | "start_date" | "end_date" | "created_at" | "updated_at"
 >;
+type LegacyTripSelect = Omit<TripSelect, "destinations">;
 
 type MemberSelect = Pick<
   Database["public"]["Tables"]["trip_members"]["Row"],
@@ -23,6 +25,21 @@ type MemberSelect = Pick<
 
 type TripDaySelect = TripDayRow;
 type TripItemSelect = Database["public"]["Tables"]["trip_items"]["Row"];
+
+function parseTripDestinations(value: Database["public"]["Tables"]["trips"]["Row"]["destinations"]): TripDestination[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((entry): entry is TripDestination => {
+    return (
+      Array.isArray(entry) &&
+      entry.length >= 2 &&
+      typeof entry[0] === "string" &&
+      typeof entry[1] === "string"
+    );
+  });
+}
 
 function toTripPlaceCard(item: TripItemSelect): TripPlaceCard {
   return {
@@ -83,12 +100,34 @@ export async function getWorkspaceSnapshot(
 ): Promise<WorkspaceSnapshot | null> {
   const supabase = await createClient();
 
-  const { data: trip, error: tripError } = await supabase
+  const { data: tripWithDestinations, error: tripWithDestinationsError } = await supabase
     .from("trips")
-    .select("id, title, destination, start_date, end_date, created_at, updated_at")
+    .select("id, title, destination, destinations, start_date, end_date, created_at, updated_at")
     .eq("id", tripId)
     .maybeSingle()
     .overrideTypes<TripSelect | null, { merge: false }>();
+
+  let trip: TripSelect | null = tripWithDestinations;
+  let tripError = tripWithDestinationsError;
+
+  if (
+    tripWithDestinationsError?.message.includes("column trips.destinations does not exist")
+  ) {
+    const { data: legacyTrip, error: legacyTripError } = await supabase
+      .from("trips")
+      .select("id, title, destination, start_date, end_date, created_at, updated_at")
+      .eq("id", tripId)
+      .maybeSingle()
+      .overrideTypes<LegacyTripSelect | null, { merge: false }>();
+
+    trip = legacyTrip
+      ? {
+          ...legacyTrip,
+          destinations: null,
+        }
+      : null;
+    tripError = legacyTripError;
+  }
 
   if (tripError) {
     throw new Error(tripError.message);
@@ -151,6 +190,7 @@ export async function getWorkspaceSnapshot(
       id: trip.id,
       title: trip.title,
       destination: trip.destination,
+      destinations: parseTripDestinations(trip.destinations),
       startDate: trip.start_date,
       endDate: trip.end_date,
       createdAt: trip.created_at,

@@ -1,5 +1,5 @@
 import type { Database } from "@/types/database";
-import type { TripMemberRole } from "@/types/trip";
+import type { TripDestination, TripMemberRole } from "@/types/trip";
 
 export type TripRow = Database["public"]["Tables"]["trips"]["Row"];
 export type TripsListResult =
@@ -9,6 +9,7 @@ export type TripListItem = {
   id: string;
   title: string;
   destination: string | null;
+  destinations: TripDestination[];
   startDate: string;
   endDate: string;
   createdAt: string;
@@ -20,6 +21,7 @@ export type TripListItem = {
 export type CreateTripInput = {
   title: string;
   destination: string;
+  destinations: TripDestination[];
   startDate: string;
   endDate: string;
 };

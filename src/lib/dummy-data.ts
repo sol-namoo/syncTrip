@@ -16,6 +16,7 @@ export const DUMMY_WORKSPACE_TRIP: WorkspaceTrip = {
   id: DEMO_TRIP_ID,
   title: "영월 단종 유적 & 별빛 여행",
   destination: "영월, 강원도",
+  destinations: [["영월", "대한민국"]],
   startDate: "2026-04-12",
   endDate: "2026-04-13",
   createdAt: DEMO_TIMESTAMP,

@@ -16,7 +16,6 @@ export function toTripShareSettingsRow(
     trip_id: input.tripId,
     share_code: input.shareCode,
     message: input.message,
-    og_image_url: input.ogImageUrl ?? null,
     updated_by: userId,
   };
 }

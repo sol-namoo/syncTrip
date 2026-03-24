@@ -1,11 +1,28 @@
 import { createClient } from "@/lib/supabase/client";
 import type { TripListItem, TripsListResult } from "@/features/trips/types";
+import type { TripDestination } from "@/types/trip";
+
+function parseTripDestinations(value: TripsListResult["destinations"]): TripDestination[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((entry): entry is TripDestination => {
+    return (
+      Array.isArray(entry) &&
+      entry.length >= 2 &&
+      typeof entry[0] === "string" &&
+      typeof entry[1] === "string"
+    );
+  });
+}
 
 function toTripListItem(item: TripsListResult): TripListItem {
   return {
     id: item.id,
     title: item.title,
     destination: item.destination,
+    destinations: parseTripDestinations(item.destinations),
     startDate: item.start_date,
     endDate: item.end_date,
     createdAt: item.created_at,

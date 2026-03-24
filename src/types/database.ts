@@ -8,6 +8,7 @@ export type Database = {
           id: string;
           title: string;
           destination: string | null;
+          destinations: Json | null;
           start_date: string;
           end_date: string;
           last_updated_by: string | null;
@@ -18,6 +19,7 @@ export type Database = {
           id?: string;
           title: string;
           destination?: string | null;
+          destinations?: Json | null;
           start_date: string;
           end_date: string;
           last_updated_by?: string | null;
@@ -28,6 +30,7 @@ export type Database = {
           id?: string;
           title?: string;
           destination?: string | null;
+          destinations?: Json | null;
           start_date?: string;
           end_date?: string;
           last_updated_by?: string | null;
@@ -146,7 +149,6 @@ export type Database = {
           trip_id: string;
           share_code: string;
           message: string;
-          og_image_url: string | null;
           updated_by: string | null;
           created_at: string;
           updated_at: string;
@@ -155,7 +157,6 @@ export type Database = {
           trip_id: string;
           share_code: string;
           message?: string;
-          og_image_url?: string | null;
           updated_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -164,7 +165,6 @@ export type Database = {
           trip_id?: string;
           share_code?: string;
           message?: string;
-          og_image_url?: string | null;
           updated_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -180,6 +180,7 @@ export type Database = {
           p_start_date: string;
           p_end_date: string;
           p_destination?: string | null;
+          p_destinations?: Json | null;
         };
         Returns: Database["public"]["Tables"]["trips"]["Row"];
       };
@@ -189,6 +190,7 @@ export type Database = {
           id: string;
           title: string;
           destination: string | null;
+          destinations: Json | null;
           start_date: string;
           end_date: string;
           created_at: string;
