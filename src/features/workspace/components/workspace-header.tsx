@@ -6,6 +6,7 @@ import { AvatarStack, type AvatarStackUser } from "@/components/ui/avatar-stack"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ProfileMenu } from "@/features/auth/components/profile-menu";
+import { EditTripDialog } from "@/features/workspace/components/edit-trip-dialog";
 import { useWorkspaceUiStore } from "@/store/workspace-ui-store";
 import type { SaveIndicatorState } from "@/types/workspace";
 import type { WorkspaceActor, WorkspaceTrip } from "@/types/workspace";
@@ -32,11 +33,13 @@ export function WorkspaceHeader({
   actor,
   collaborators,
   participantCount,
+  onOpenShareModal,
 }: {
   trip: WorkspaceTrip;
   actor: WorkspaceActor;
   collaborators: AvatarStackUser[];
   participantCount: number;
+  onOpenShareModal: () => void;
 }) {
   const saveState = useWorkspaceUiStore((state) => state.saveState);
 
@@ -50,7 +53,12 @@ export function WorkspaceHeader({
           </Link>
           <div className="hidden h-6 w-px bg-line-token md:block" />
           <div className="min-w-0 xl:flex xl:min-w-0 xl:items-center xl:gap-5">
-            <p className="truncate text-lg font-semibold text-foreground md:text-xl">{trip.title}</p>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <p className="truncate text-lg font-semibold text-foreground md:text-xl">{trip.title}</p>
+              {actor.capabilities.canManageTrip ? (
+                <EditTripDialog trip={trip} disabled={!actor.capabilities.canManageTrip} />
+              ) : null}
+            </div>
             <span className="block text-sm text-muted-foreground xl:truncate">
               {trip.startDate} ~ {trip.endDate}
             </span>
@@ -90,6 +98,7 @@ export function WorkspaceHeader({
             variant="outline"
             disabled={!actor.capabilities.canExport}
             className="hidden rounded-full md:inline-flex lg:hidden"
+            onClick={onOpenShareModal}
           >
             3D
           </Button>
@@ -98,6 +107,7 @@ export function WorkspaceHeader({
             variant="outline"
             disabled={!actor.capabilities.canExport}
             className="hidden rounded-full lg:inline-flex"
+            onClick={onOpenShareModal}
           >
             3D 여권 발급받기
           </Button>
