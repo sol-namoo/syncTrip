@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react"
 import dayjs from "dayjs"
 import { useRouter } from "next/navigation"
-import { CalendarIcon, Plus } from "lucide-react"
+import { CalendarIcon, MapPin, Plus, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -22,9 +22,28 @@ import { cn } from "@/lib/utils"
 import { DATE_FORMAT, MAX_TRIP_DAYS } from "@/features/trips/constants"
 import { useCreateTripMutation } from "@/features/trips/hooks/useCreateTripMutation"
 import type { CreateTripInput } from "@/features/trips/types"
+import type { TripDestination } from "@/types/trip"
+
+type DestinationDraft = {
+  city: string
+  country: string
+}
 
 function getDurationDays(startDate: string, endDate: string) {
   return dayjs(endDate).diff(dayjs(startDate), "day") + 1
+}
+
+function normalizeDestinations(rows: DestinationDraft[]): TripDestination[] {
+  return rows
+    .map(({ city, country }) => [city.trim(), country.trim()] as TripDestination)
+    .filter(([city, country]) => city.length > 0 && country.length > 0)
+}
+
+function createEmptyDestinationDraft(): DestinationDraft {
+  return {
+    city: "",
+    country: "",
+  }
 }
 
 export function CreateTripDialog() {
@@ -32,9 +51,11 @@ export function CreateTripDialog() {
   const createTripMutation = useCreateTripMutation()
   const today = dayjs().format(DATE_FORMAT)
   const [open, setOpen] = useState(false)
+  const [destinationRows, setDestinationRows] = useState<DestinationDraft[]>([createEmptyDestinationDraft()])
   const [form, setForm] = useState<CreateTripInput>({
     title: "",
     destination: "",
+    destinations: [],
     startDate: today,
     endDate: today,
   })
@@ -98,6 +119,36 @@ export function CreateTripDialog() {
     })
   }
 
+  const handleDestinationRowChange =
+    (index: number, field: keyof DestinationDraft) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value
+      setDestinationRows((current) =>
+        current.map((row, rowIndex) =>
+          rowIndex === index
+            ? {
+                ...row,
+                [field]: value,
+              }
+            : row
+        )
+      )
+    }
+
+  const handleAddDestinationRow = () => {
+    setDestinationRows((current) => [...current, createEmptyDestinationDraft()])
+  }
+
+  const handleRemoveDestinationRow = (index: number) => {
+    setDestinationRows((current) => {
+      if (current.length === 1) {
+        return [createEmptyDestinationDraft()]
+      }
+
+      return current.filter((_, rowIndex) => rowIndex !== index)
+    })
+  }
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
@@ -107,14 +158,20 @@ export function CreateTripDialog() {
     }
 
     try {
+      const parsedDestinations = normalizeDestinations(destinationRows)
+      const primaryDestination = parsedDestinations[0]
+        ? parsedDestinations[0].filter(Boolean).join(", ")
+        : ""
       const trip = await createTripMutation.mutateAsync({
         title: form.title.trim(),
-        destination: form.destination.trim(),
+        destination: primaryDestination,
+        destinations: parsedDestinations,
         startDate: form.startDate,
         endDate: form.endDate,
       })
 
       setOpen(false)
+      setDestinationRows([createEmptyDestinationDraft()])
       toast.success("새 여행이 생성되었습니다.")
       router.push(`/workspace/${trip.id}`)
     } catch (error) {
@@ -160,16 +217,64 @@ export function CreateTripDialog() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="destination">
-              목적지
-            </label>
-            <Input
-              id="destination"
-              value={form.destination}
-              onChange={handleChange("destination")}
-              placeholder="예: 영월, 한국"
-              maxLength={80}
-            />
+            <div className="flex items-center justify-between gap-3">
+              <label className="text-sm font-medium">
+                목적지
+              </label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddDestinationRow}
+              >
+                <Plus className="size-4" />
+                경유지 추가
+              </Button>
+            </div>
+            <div className="space-y-3">
+              {destinationRows.map((row, index) => (
+                <div key={`destination-row-${index}`} className="flex items-start gap-2">
+                  <Input
+                    value={row.city}
+                    onChange={handleDestinationRowChange(index, "city")}
+                    placeholder="도시"
+                    maxLength={40}
+                  />
+                  <Input
+                    value={row.country}
+                    onChange={handleDestinationRowChange(index, "country")}
+                    placeholder="국가"
+                    maxLength={40}
+                  />
+                  {index === 0 ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      disabled
+                      tabIndex={-1}
+                      aria-hidden="true"
+                      className="pointer-events-none opacity-70"
+                    >
+                      <MapPin className="size-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveDestinationRow(index)}
+                      aria-label={`목적지 ${index + 1} 삭제`}
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              첫 번째 행이 대표 목적지가 됩니다.
+            </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">

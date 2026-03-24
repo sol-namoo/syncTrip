@@ -1,7 +1,9 @@
 "use client";
 
-import { useMemo } from "react";
+import dynamic from "next/dynamic";
+import { useMemo, useState } from "react";
 import { MapShell } from "@/features/map/components/map-shell";
+import { buildTicketRenderData } from "@/features/ticket3d/lib/build-ticket-data";
 import { WorkspaceBoard } from "@/features/workspace/components/workspace-board";
 import { WorkspaceHeader } from "@/features/workspace/components/workspace-header";
 import { useHydrateWorkspaceStores } from "@/features/workspace/hooks/use-hydrate-workspace-stores";
@@ -10,6 +12,16 @@ import { useWorkspaceBoardStore } from "@/store/workspace-board-store";
 import { useWorkspacePresenceStore } from "@/store/workspace-presence-store";
 import { assignCollaborationColors } from "@/lib/collaboration-colors";
 import type { WorkspaceActor, WorkspaceSnapshot } from "@/types/workspace";
+
+const LazyShareTicketModal = dynamic(
+  () =>
+    import("@/features/ticket3d/components/share-modal").then((module) => ({
+      default: module.ShareTicketModal,
+    })),
+  {
+    ssr: false,
+  }
+);
 
 export function WorkspaceScreen({
   snapshot,
@@ -20,6 +32,7 @@ export function WorkspaceScreen({
   tripId: string;
   actor: WorkspaceActor;
 }) {
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   useHydrateWorkspaceStores(snapshot);
   const { broadcastDragState, broadcastEditingState } = useWorkspacePresence({
     tripId,
@@ -77,6 +90,18 @@ export function WorkspaceScreen({
       });
   }, [activePresenceUsers, collaboratorColorMap, currentUserId]);
 
+  const ticketRenderData = useMemo(() => {
+    return buildTicketRenderData({
+      snapshot: {
+        trip: boardTrip,
+        members: snapshot.members,
+        columns,
+        cards,
+      },
+      actor,
+    });
+  }, [actor, boardTrip, cards, columns, snapshot.members]);
+
   return (
     <main className="flex min-h-screen flex-col bg-[color:var(--color-bg-page)] xl:h-screen xl:overflow-hidden">
       <WorkspaceHeader
@@ -84,6 +109,7 @@ export function WorkspaceScreen({
         actor={actor}
         collaborators={collaborators}
         participantCount={participantCount}
+        onOpenShareModal={() => setIsShareModalOpen(true)}
       />
 
       <div className="grid flex-1 grid-cols-1 xl:min-h-0 xl:grid-cols-[1.05fr_1.75fr]">
@@ -107,6 +133,15 @@ export function WorkspaceScreen({
       <button className="fixed bottom-5 right-5 inline-flex size-10 items-center justify-center rounded-full border border-[color:var(--color-border-card)] bg-[color:var(--color-bg-card)] text-[color:var(--color-ink-muted)] shadow-sm">
         ?
       </button>
+      {isShareModalOpen ? (
+        <LazyShareTicketModal
+          open={isShareModalOpen}
+          onOpenChange={setIsShareModalOpen}
+          trip={boardTrip}
+          actor={actor}
+          renderData={ticketRenderData}
+        />
+      ) : null}
     </main>
   );
 }

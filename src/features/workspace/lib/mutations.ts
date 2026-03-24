@@ -4,6 +4,7 @@ import type {
   TripItemRow,
   TripPlaceCard,
 } from "@/types/workspace";
+import type { TripDestination } from "@/types/trip";
 import type { PlaceDetailsResult } from "@/features/map/lib/place-search-adapter";
 
 export async function moveTripItem(input: MoveTripItemInput): Promise<void> {
@@ -116,6 +117,27 @@ export async function updateTripDayTitle(input: {
       title: input.title,
     })
     .eq("id", input.dayId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function updateTripMeta(input: {
+  tripId: string;
+  title: string;
+  destination: string | null;
+  destinations: TripDestination[];
+}): Promise<void> {
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("trips")
+    .update({
+      title: input.title,
+      destination: input.destination,
+      destinations: input.destinations.length > 0 ? input.destinations : null,
+    })
+    .eq("id", input.tripId);
 
   if (error) {
     throw new Error(error.message);

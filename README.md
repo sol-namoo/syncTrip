@@ -2,6 +2,8 @@
 
 > This project is currently in MVP development. It is not a finished product yet, and the current focus is on the core user flow and realtime collaboration features.
 
+현재 MVP 개발이 막바지 단계이며, https://sync-trip-zeta.vercel.app/ 에서 기능을 테스트해 볼 수 있습니다.
+
 SyncTrip is a collaborative travel planning product where multiple users can build and edit a trip together. The goal is to let users search places, organize them by day in a kanban board, and shape a shared itinerary alongside a map view.
 
 The current MVP is focused on the following:

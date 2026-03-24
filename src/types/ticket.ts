@@ -1,4 +1,5 @@
 import type { Database } from "@/types/database";
+import type { TripDestination } from "@/types/trip";
 import type { WorkspaceSnapshot } from "@/types/workspace";
 
 export type TripShareSettingsRow = Database["public"]["Tables"]["trip_share_settings"]["Row"];
@@ -16,6 +17,10 @@ export type TicketRenderData = {
   tripId: string;
   title: string;
   destinationLabel: string;
+  destinationCode: string;
+  stampLabel: string;
+  routeStops: string[];
+  coverImageUrl: string | null;
   startDate: string | null;
   endDate: string | null;
   participantCount: number;
@@ -29,16 +34,16 @@ export type CreateTripShareSettingsInput = {
   tripId: string;
   message: string;
   shareCode: string;
-  ogImageUrl?: string | null;
 };
 
 export type UpsertTripShareSettingsRow = {
   trip_id: string;
   share_code: string;
   message: string;
-  og_image_url?: string | null;
   updated_by: string;
 };
+
+export type TicketRouteDestination = TripDestination;
 
 export type ReadonlyItinerarySnapshot = Pick<
   WorkspaceSnapshot,
