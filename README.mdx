@@ -1,0 +1,366 @@
+# SyncTrip
+
+> A collaborative travel planning workspace built with Next.js, Supabase, Google Maps, and a 3D ticket-sharing concept.
+
+SyncTrip is an MVP-stage product for planning trips with other people in one shared workspace. Users can create trips, search places, drag stops into day columns, see changes reflected on a map, and collaborate in real time through Supabase Realtime.
+
+The MVP is currently in its final stretch of development, and you can try the live app at `https://sync-trip-zeta.vercel.app/`. Feedback of any kind is welcome.
+
+## Learning Goals
+
+- This project is also a hands-on learning project for trying new technologies in a product-shaped MVP.
+- The core MVP learning goals are:
+  - concurrent collaboration with websockets / realtime synchronization
+  - basic usage of Three.js for an interactive 3D ticket viewer
+  - practical SQL database usage with Supabase
+
+## Beyond the MVP
+
+- After the MVP, additional learning goals remain:
+  - mobile UI support and layout refactoring
+  - a mobile app using React Native
+  - replacing Supabase with an explicit API layer and ORM (`Node.js + Prisma`)
+  - gradually practicing a serverless / cloud-native architecture
+
+<details>
+<summary><strong>Why this project is interesting</strong></summary>
+
+- It combines a Kanban-style itinerary board with a synchronized map.
+- It uses Supabase for auth, persistence, RPC, row-level security, and realtime presence.
+- It experiments with a shareable 3D passport-style travel ticket as an export surface.
+- It keeps a feature-driven frontend structure instead of a route-only or service-heavy layout.
+
+</details>
+
+## Overview
+
+| Area | What SyncTrip does |
+| --- | --- |
+| Planning | Create a trip with title, date range, and one or more destinations |
+| Collaboration | Show active collaborators, editing state, and drag state in the workspace |
+| Mapping | Search places with Google Places and render route markers on Google Maps |
+| Organization | Move places between a bucket and per-day itinerary columns |
+| Sharing | Generate a persistent share code and preview a 3D ticket experience |
+| Demo Mode | Explore the workspace without login through an anonymous demo entry |
+
+## Current Product Status
+
+> [!NOTE]
+> SyncTrip is still an MVP. The core collaborative workspace is implemented, but some product areas are intentionally incomplete.
+>
+> You can also explore the current deployment at `https://sync-trip-zeta.vercel.app/`, and feedback of any kind is welcome.
+
+### Implemented now
+
+- Authenticated trip list and trip creation flow
+- Workspace snapshot loading from Supabase
+- Realtime collaboration presence and activity indicators
+- Place search via Google Places
+- Drag-and-drop itinerary organization
+- 3D ticket modal with persistent share settings
+- Anonymous demo workspace entry
+
+### Still in progress
+
+- Public share page at `/share/[id]` currently exists as a placeholder route
+- Invite flow UI is present, but invitation mechanics are not yet wired through
+- License and dedicated contribution policy files are not yet included in the repository
+
+## Tech Stack
+
+| Layer | Tools |
+| --- | --- |
+| App framework | Next.js 16 App Router, React 19, TypeScript |
+| Styling | Tailwind CSS v4, shadcn/ui, Radix UI, `tw-animate-css` |
+| Data fetching | TanStack Query |
+| Backend | Supabase Auth, Postgres, Realtime, RPC |
+| Maps | `@vis.gl/react-google-maps`, Google Places |
+| Collaboration UI | Zustand, `@hello-pangea/dnd`, `@dnd-kit/*` |
+| 3D rendering | `@react-three/fiber`, `@react-three/drei`, `three` |
+| Component dev | Storybook 10 |
+
+## Product Flow
+
+```text
+/login -> /trips -> /workspace/:id -> share ticket modal
+                      \-> /workspace/demo
+```
+
+### Key routes
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Redirects to `/trips` |
+| `/login` | Google OAuth and magic-link sign-in |
+| `/trips` | Authenticated trip dashboard and trip creation |
+| `/workspace/[id]` | Main collaborative planning workspace |
+| `/workspace/demo` | Anonymous demo workspace with seeded data |
+| `/share/[id]` | Reserved for public ticket sharing, currently empty |
+| `/auth/callback` | Supabase auth callback exchange |
+
+## Architecture
+
+SyncTrip follows a feature-driven structure. App Router files stay thin and mostly resolve auth, routing, and initial server-side data. Feature folders own their UI, hooks, Supabase queries, mutations, and local helpers.
+
+```tsx
+// src/app/workspace/[id]/page.tsx
+const snapshot = await getWorkspaceSnapshot(id);
+const role = resolveWorkspaceRole(user?.id, snapshot.members);
+
+return (
+  <WorkspaceScreen
+    snapshot={snapshot}
+    tripId={id}
+    actor={actor}
+  />
+);
+```
+
+### Core patterns
+
+- Server components fetch the initial workspace snapshot.
+- Zustand stores hydrate client-side from that snapshot.
+- React Query wraps standard client fetch and mutation flows.
+- Supabase Realtime handles presence and activity broadcasts.
+- Postgres RPC is used for transactional operations such as trip creation and card reordering.
+
+## Project Structure
+
+```text
+.
+├── docs/                     # Product and engineering notes
+├── public/                   # Static assets
+├── src/
+│   ├── app/                  # Next.js App Router entry points
+│   ├── components/ui/        # Shared UI primitives and Storybook stories
+│   ├── features/
+│   │   ├── auth/             # Login and profile UI
+│   │   ├── map/              # Google Maps canvas and place search adapter
+│   │   ├── share/            # Share settings queries and mutations
+│   │   ├── ticket3d/         # 3D ticket data shaping and rendering
+│   │   ├── trips/            # Trip list, creation, and trip query layer
+│   │   └── workspace/        # Main collaborative itinerary experience
+│   ├── lib/                  # Shared utilities, providers, Supabase clients
+│   ├── store/                # Zustand stores for board, presence, and UI state
+│   └── types/                # Global domain and database types
+├── supabase/
+│   ├── migrations/           # SQL schema history and RPC definitions
+│   └── README.md             # Migration notes
+├── package.json
+└── README.mdx
+```
+
+### Important folders
+
+| Path | Why it matters |
+| --- | --- |
+| `src/app` | Defines route entry points and layout boundaries |
+| `src/features/workspace` | Contains the main business logic for planning and collaboration |
+| `src/features/map` | Adapts Google Places into place cards and markers |
+| `src/features/ticket3d` | Builds the export/share presentation layer |
+| `src/store` | Holds client-side collaborative state and UI state |
+| `supabase/migrations` | Documents the actual schema and database-side rules |
+| `docs` | Captures architectural decisions and MVP design notes |
+
+## Database Model
+
+The repository includes Supabase SQL migrations for the main collaboration model.
+
+| Table / Function | Role |
+| --- | --- |
+| `trips` | Top-level trip metadata |
+| `trip_members` | Membership and role mapping (`owner`, `editor`) |
+| `trip_days` | Per-day columns used by the workspace board |
+| `trip_items` | Planned places stored in bucket or day lists |
+| `trip_share_settings` | One persistent share code and message per trip |
+| `create_trip_with_owner` | RPC for creating a trip and owner membership atomically |
+| `move_trip_item` | RPC for saving drag-and-drop ordering atomically |
+
+<details>
+<summary><strong>Schema notes</strong></summary>
+
+- Row Level Security is enabled on the main collaboration tables.
+- Realtime publication is used for workspace-related tables.
+- The board model evolved from `day_index` to `trip_day_id`, and the codebase already reflects that newer direction.
+
+</details>
+
+## Main Features
+
+### 1. Collaborative trip workspace
+
+The workspace merges two views:
+
+- A Kanban-like board for bucket and day planning
+- A Google Map that visualizes selected places and route segments
+
+### 2. Realtime presence, not raw cursor sync
+
+SyncTrip deliberately broadcasts domain targets instead of viewport coordinates. That means collaborators see who is online, who is dragging, and who is editing, without relying on fragile pixel-perfect pointer sharing.
+
+```ts
+type WorkspaceBroadcastEvent =
+  | { type: "target"; target: { kind: "card" | "column" | "none"; id?: string } }
+  | { type: "drag"; state: "start" | "end"; itemId: string; columnId: string | null }
+  | { type: "editing"; state: "start" | "end"; cardId: string };
+```
+
+### 3. Place search and route visualization
+
+Google Places autocomplete is wrapped behind a feature adapter, then converted into normalized place details that can be inserted directly into the workspace.
+
+```ts
+const predictions = await autocompleteService.getPlacePredictions({
+  input: normalized,
+  types: ["establishment"],
+});
+```
+
+### 4. 3D ticket sharing concept
+
+The share modal turns a trip snapshot into a passport-style render model. It derives destination labels, route stops, participant counts, and a persistent share code for export.
+
+### 5. Demo workspace
+
+The `/workspace/demo` route signs visitors in anonymously and mounts a seeded workspace snapshot so the collaboration UI can be explored without creating a real trip first.
+
+## Environment Variables
+
+Create a local `.env.development` file with the following values:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your_supabase_publishable_key
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID=your_google_maps_map_id
+```
+
+> [!WARNING]
+> Without `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, the workspace still loads but the map canvas falls back to an empty-state message.
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 20 or newer
+- npm
+- A Supabase project with the repository migrations applied
+- A Google Maps API key with Places enabled
+
+### Installation
+
+```bash
+npm install
+```
+
+### Run the app
+
+```bash
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+### Available scripts
+
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the Next.js development server |
+| `npm run build` | Build the production app |
+| `npm run start` | Start the production server |
+| `npm run lint` | Run ESLint |
+| `npm run storybook` | Launch Storybook locally |
+| `npm run build-storybook` | Generate a static Storybook build |
+
+## Local Setup Checklist
+
+1. Install dependencies with `npm install`.
+2. Add the required environment variables.
+3. Apply Supabase migrations to your project.
+4. Configure Supabase auth providers you want to use.
+5. Enable Google Maps and Places for your API key.
+6. Start the app with `npm run dev`.
+
+<details>
+<summary><strong>What to configure in Supabase</strong></summary>
+
+- Auth:
+  - Google OAuth if you want social login
+  - Email OTP if you want magic-link login
+- Database:
+  - Run the SQL migrations in `supabase/migrations`
+- Realtime:
+  - Keep the relevant tables in the publication used by the project
+
+</details>
+
+## Example Usage
+
+### Create a trip
+
+1. Sign in at `/login`.
+2. Open `/trips`.
+3. Click the trip creation dialog.
+4. Enter a title, dates, and one or more destinations.
+5. You will be redirected into the new workspace.
+
+### Plan the itinerary
+
+1. Search for a place from the workspace search panel.
+2. Insert it into the bucket or a day column.
+3. Drag cards between days.
+4. Watch markers and route segments update on the map.
+
+### Share the ticket concept
+
+1. Open the share action in the workspace header.
+2. Add an optional message for the ticket back side.
+3. Persist the share code.
+4. Copy the generated public link preview.
+
+## Notable Implementation Details
+
+| Concern | Implementation |
+| --- | --- |
+| Initial workspace load | Server-side snapshot query composed from `trips`, `trip_members`, `trip_days`, and `trip_items` |
+| Optimistic planning UI | Client-side Zustand board state with mutation hooks |
+| Realtime collaboration | Supabase channel per workspace topic: `workspace:{tripId}` |
+| Save integrity | Postgres RPC for ordered card movement |
+| Export model | `buildTicketRenderData` derives presentation-ready share data |
+| Demo access | Anonymous Supabase auth plus seeded dummy snapshot |
+
+## Documentation in the Repository
+
+These files are worth reading if you want deeper implementation context:
+
+- `docs/synctrip-engineering-notes.md`
+- `docs/synctrip-mvp-design.md`
+- `docs/workspace-realtime-design.md`
+- `docs/workspace-place-search-userflow.md`
+- `docs/synctrip-mvp-implementation-plan.md`
+
+## Contributing
+
+There is no dedicated `CONTRIBUTING.md` file yet, so contributors should use the current project conventions:
+
+- Keep routing concerns inside `src/app`.
+- Put feature logic in `src/features/<feature>`.
+- Prefer shared primitives in `src/components/ui`.
+- Keep Supabase-facing code in feature `lib` folders or shared `src/lib`.
+- Preserve the feature-driven structure instead of introducing cross-cutting folders too early.
+- Run `npm run lint` before opening a pull request.
+
+## License
+
+No `LICENSE` file is present in this repository at the time of writing. Until a license is added by the maintainers, treat the codebase as proprietary by default.
+
+## Closing Notes
+
+SyncTrip is less about generic CRUD screens and more about the intersection of planning, collaboration, and presentation. The most distinctive part of the codebase is how it combines:
+
+- a shared itinerary board,
+- a map-driven planning surface,
+- Supabase-powered realtime collaboration,
+- and a stylized 3D sharing concept.
+
+That combination makes this repository a useful reference for teams building collaborative travel, event-planning, or itinerary-style products.
