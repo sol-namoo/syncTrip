@@ -127,7 +127,7 @@ function MapZoomControls() {
         type="button"
         aria-label="Zoom in"
         onClick={() => {
-          const currentZoom = map.getZoom() ?? 11;
+          const currentZoom = map.getZoom() ?? 13;
           map.setZoom(Math.min(currentZoom + 1, 20));
         }}
         className="inline-flex size-10 items-center justify-center rounded-xl border border-[color:var(--color-border-card)] bg-white text-[color:var(--color-ink)] shadow-sm transition-colors hover:bg-[color:var(--color-bg-page)]"
@@ -138,7 +138,7 @@ function MapZoomControls() {
         type="button"
         aria-label="Zoom out"
         onClick={() => {
-          const currentZoom = map.getZoom() ?? 11;
+          const currentZoom = map.getZoom() ?? 13;
           map.setZoom(Math.max(currentZoom - 1, 3));
         }}
         className="inline-flex size-10 items-center justify-center rounded-xl border border-[color:var(--color-border-card)] bg-white text-[color:var(--color-ink)] shadow-sm transition-colors hover:bg-[color:var(--color-bg-page)]"
@@ -165,7 +165,7 @@ export function MapCanvas({
     () => markers.find((marker) => marker.isSelected) ?? null,
     [markers]
   );
-  const [zoom, setZoom] = useState(11);
+  const [zoom, setZoom] = useState(13);
 
   if (!apiKey) {
     return (
@@ -189,7 +189,7 @@ export function MapCanvas({
         <Map
           id="workspace-map"
           defaultCenter={defaultCenter}
-          defaultZoom={11}
+          defaultZoom={13}
           mapId={mapId}
           gestureHandling="greedy"
           disableDefaultUI

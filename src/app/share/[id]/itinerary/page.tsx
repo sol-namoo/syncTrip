@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { PublicTicketView } from "@/features/share/components/public-ticket-view";
+import { ReadonlyItineraryView } from "@/features/share/components/readonly-itinerary-view";
 import { getPublicTicketPageData } from "@/features/share/lib/public-queries";
 
-export default async function SharePage({
+export default async function ShareItineraryPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -14,5 +14,5 @@ export default async function SharePage({
     notFound();
   }
 
-  return <PublicTicketView data={data} />;
+  return <ReadonlyItineraryView data={data} />;
 }

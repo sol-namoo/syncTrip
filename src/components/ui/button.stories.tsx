@@ -6,7 +6,7 @@ const meta = {
   component: Button,
   tags: ["autodocs"],
   args: {
-    children: "3D 여권 발급받기",
+    children: "티켓 공유하기",
     variant: "default",
     size: "default",
   },

@@ -219,6 +219,57 @@
   - rollback이 단순하다.
   - 현재 Zustand 구조와 연결이 더 자연스럽다.
 
+### 7.3. Public Share View와 RLS 경계
+
+- 공유 티켓/공개 itinerary를 위해 원본 테이블의 RLS를 `member-only`에서 느슨하게 푸는 방식은 채택하지 않는다.
+- 대신 `share_code`를 입력으로 받고, 공개해도 되는 데이터만 반환하는 공개 전용 read 함수(`security definer` RPC)를 둔다.
+
+#### 왜 원본 테이블 RLS를 풀지 않는가
+
+- `trips`, `trip_days`, `trip_items`, `trip_share_settings`는 협업용 원본 데이터다.
+- 이 테이블의 RLS를 “멤버만”이 아니게 바꾸기 시작하면:
+  - 어떤 row가 공개 가능한지
+  - 어떤 컬럼까지 공개 가능한지
+  - 공개 링크가 있는 경우만 허용해야 하는지
+  - 일반 앱 화면과 공개 화면의 정책을 어떻게 나눌지
+  를 여러 테이블 정책에 흩어서 관리하게 된다.
+- 이렇게 되면 정책이 빠르게 복잡해지고, 실수로 과한 공개 범위를 허용할 위험이 커진다.
+
+#### 왜 앱 코드의 목적 체크만으로는 부족한가
+
+- “화면별로 필요한 데이터만 읽자”는 앱 레벨 규칙은 유효하지만, 그것만으로 DB 보안이 성립하지는 않는다.
+- 앱 코드에서 특정 쿼리를 조심해서 쓰더라도, DB 정책이 열려 있으면 다른 경로나 다른 클라이언트에서 같은 데이터를 읽을 수 있다.
+- 즉:
+  - 앱 코드의 목적 체크
+  - DB의 최종 접근 제어
+  는 별개의 층이다.
+- 공개 링크 기능은 특히 비로그인 사용자(`anon`)가 포함되므로, DB 쪽 경계를 더 명확하게 두는 편이 안전하다.
+
+#### SyncTrip의 현재 원칙
+
+- 협업용 원본 테이블
+  - 기본적으로 `member-only` RLS 유지
+- 공개 티켓 / 읽기 전용 itinerary
+  - `share_code` 기반 `security definer` RPC로만 접근
+- 공개 함수의 반환 shape
+  - 화면에 필요한 projection만 반환
+  - 내부 협업 메타데이터나 불필요한 컬럼은 아예 노출하지 않음
+
+#### 이 결정의 장점
+
+- 원본 데이터 권한 모델이 깨끗하게 유지된다.
+- 공개 범위를 함수 반환 shape 수준에서 명시적으로 제한할 수 있다.
+- 공개 링크 정책을 앱 화면과 분리해 reasoning하기 쉬워진다.
+- 나중에 공개 정책을 수정해도 테이블 RLS 전체를 다시 흔들 필요가 없다.
+
+#### 나중에 더 공부할 키워드
+
+- Supabase RLS fundamentals
+- Postgres `security definer` function
+- projection query vs raw table access
+- 앱 레벨 authorization과 DB 레벨 authorization의 차이
+- public link model과 capability-based access
+
 ## 8. Future Topics
 
 - optimistic update 허용 범위
@@ -251,3 +302,85 @@ const code = Array.from(
   - 각 바이트를 알파벳 인덱스로 매핑
   - 최종 문자열로 join
 - 즉 `share_code` 같은 짧은 랜덤 식별자를 만들 때 Node 전용 `crypto` import 없이도 처리할 수 있다.
+
+### 9.2. Share Code 생성 규칙과 조회 방식
+
+- SyncTrip의 공유 링크는 `trip_id`를 URL에 직접 노출하지 않고, 별도의 `share_code`를 사용한다.
+- 현재 형식은:
+  - `/share/<share_code>`
+
+#### 생성 규칙
+
+- 알파벳은 아래 문자 집합을 사용한다.
+
+```ts
+ABCDEFGHJKLMNPQRSTUVWXYZ23456789
+```
+
+- 특징:
+  - `I`, `O`, `1`, `0`처럼 헷갈리기 쉬운 문자를 제외한다.
+  - 사람이 복사/읽기할 때 오인식 가능성을 줄이기 위한 선택이다.
+
+- 생성 방식:
+  - 기본 길이는 10자
+  - `crypto.getRandomValues(new Uint8Array(length))`로 랜덤 바이트를 만든다.
+  - 각 바이트를 `alphabet.length`로 나눈 나머지로 문자 인덱스에 매핑한다.
+  - 최종 문자열을 `share_code`로 사용한다.
+
+예시:
+
+```ts
+const SHARE_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const randomBytes = crypto.getRandomValues(new Uint8Array(10));
+const shareCode = Array.from(
+  randomBytes,
+  (value) => SHARE_CODE_ALPHABET[value % SHARE_CODE_ALPHABET.length]
+).join("");
+```
+
+#### 어디에 저장하는가
+
+- 공유 설정은 `trip_share_settings` 테이블에 1:1로 저장한다.
+- 즉 여행당 하나의 공유 row만 가진다.
+
+핵심 컬럼:
+- `trip_id`
+- `share_code`
+- `message`
+- `updated_by`
+
+#### 링크를 열면 어떻게 trip을 찾는가
+
+- 공개 페이지는 URL의 `share_code`를 받는다.
+- DB에서는 `trip_share_settings.share_code = <incoming code>`로 먼저 row를 찾는다.
+- 그 row의 `trip_id`를 기준으로:
+  - `trips`
+  - `trip_days`
+  - `trip_items`
+  를 읽어 공개 티켓/읽기 전용 itinerary를 조립한다.
+
+즉 조회 흐름은:
+
+1. `/share/ABCD2345EF` 진입
+2. `share_code = 'ABCD2345EF'`로 `trip_share_settings` 조회
+3. 해당 row의 `trip_id` 획득
+4. 그 `trip_id`로 공개 가능한 trip/day/item 데이터를 읽음
+5. 티켓 뷰와 itinerary 뷰를 렌더
+
+#### 왜 `trip_id` 대신 `share_code`를 쓰는가
+
+- URL에서 내부 식별자(`trip_id`)를 직접 노출하지 않기 위해서다.
+- 링크를 더 짧고 사람 친화적으로 만들 수 있다.
+- 공개 접근은 항상 `trip_share_settings`를 거치게 만들어, 공개 여부와 메모를 한 곳에서 관리할 수 있다.
+
+#### 현재 저장 시점
+
+- 공유 설정은 사용자가 share modal에서
+  - `링크 복사`
+  - `수신자 미리보기`
+  를 누르는 시점에 upsert된다.
+- 이때:
+  - `share_code`가 없으면 생성
+  - 이미 있으면 재사용
+  - `message`는 최신 입력값으로 갱신
+한다.
