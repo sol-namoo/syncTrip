@@ -261,9 +261,19 @@ export function TicketScene({
                 </h3>
               </div>
               <div className="mt-5 flex-1 rounded-[24px] border border-dashed border-[#d4b483] bg-[rgba(212,180,131,0.08)] p-5">
-                <p className="text-sm leading-7 text-[#6b4c1e] whitespace-pre-wrap">
-                  {message.trim() || "이 여행을 함께 떠날 사람에게 남길 메모를 적어 보세요."}
-                </p>
+                {message.trim() ? (
+                  <p className="text-sm leading-7 text-[#6b4c1e] whitespace-pre-wrap">
+                    {message.trim()}
+                  </p>
+                ) : (
+                  <div className="flex h-full items-center justify-center rounded-[18px] border border-[rgba(212,180,131,0.32)] bg-[rgba(250,245,235,0.4)] px-6 text-center">
+                    <p className="text-xs leading-6 text-[#9a7340]">
+                      메모를 입력하면 티켓 뒷면에 어떻게 보이는지
+                      <br />
+                      여기에서 미리 확인할 수 있습니다.
+                    </p>
+                  </div>
+                )}
               </div>
               <div className="mt-4 flex items-center justify-between text-xs text-[#9a7340]">
                 <span>{renderData.sharedByName ? `${renderData.sharedByName}가 공유함` : "SyncTrip Share"}</span>

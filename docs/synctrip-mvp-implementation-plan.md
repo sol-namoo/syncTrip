@@ -140,6 +140,9 @@
 ### Epic 6. 3D Ticket Share + Public Views
 - 3D 티켓 발급, 공유 메모 저장, 공개 티켓 뷰, 읽기 전용 일정 뷰를 구현한다.
 
+### Epic 7. Invitation + Join Request Flow
+- 여행 협업 초대, 공개 공유 뷰에서의 참여 요청, owner 승인 흐름을 구현한다.
+
 ## 섹션 4: Task Breakdown
 
 ### Epic 1. Auth + App Shell + Route Bootstrapping
@@ -931,6 +934,49 @@
   - Workspace 재사용 욕심이 과하면 read-only 탐색성이 떨어질 수 있다.
 - 완료 조건
   - Public ticket view와 read-only itinerary view의 레이아웃 기준이 문서와 구현에서 일관되게 설명된다.
+
+### Epic 7. Invitation + Join Request Flow
+
+#### Task 7-1. Workspace 직접 초대 기능 구현
+- 목적
+  - workspace 헤더의 `친구 초대` 버튼을 실제 협업 초대 기능으로 연결한다.
+- 작업 내용
+  - owner/editor가 이메일 또는 링크로 다른 사용자를 초대할 수 있는 UI 구현
+  - 초대 생성/조회/만료 정책 설계
+  - owner 승인 시 `trip_members`에 사용자 추가
+- 관련 파일/폴더
+  - `src/features/invite/*`
+  - `src/features/workspace/components/workspace-header.tsx`
+  - `supabase/migrations/*invite*.sql`
+- Supabase 연동 필요 여부
+  - 예
+- 선행조건
+  - Task 2-1, Task 3-1
+- 난이도
+  - 상
+- 완료 조건
+  - 헤더의 `친구 초대` 버튼으로 실제 초대를 만들고 협업 참여자를 추가할 수 있다.
+
+#### Task 7-2. 공개 공유 뷰의 참여 요청 기능 구현
+- 목적
+  - 공개 티켓/일정 보기 화면에서 읽기 전용 방문자가 협업 참여를 요청할 수 있게 한다.
+- 작업 내용
+  - `함께 수정하고 싶다면?` CTA 추가
+  - 로그인되지 않은 사용자는 로그인 후 이어서 요청
+  - 로그인된 사용자는 owner에게 초대 요청 전송
+  - owner 승인 시 실제 멤버십 추가와 연결
+- 관련 파일/폴더
+  - `src/app/share/[id]/page.tsx`
+  - `src/app/share/[id]/itinerary/page.tsx`
+  - `src/features/invite/*`
+- Supabase 연동 필요 여부
+  - 예
+- 선행조건
+  - Task 6-4, Task 7-1
+- 난이도
+  - 상
+- 완료 조건
+  - 공개 공유 뷰에서 협업 참여 요청을 보낼 수 있고, 승인 후 workspace 편집 권한으로 이어진다.
 
 ## 섹션 5: State Model
 
