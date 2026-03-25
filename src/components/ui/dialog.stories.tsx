@@ -34,7 +34,7 @@ export const Default: Story = {
           </DialogDescription>
         </DialogHeader>
         <div className="rounded-lg border bg-muted/40 px-4 py-3 text-sm">
-          https://synctrip.app/workspace/demo-trip
+          https://app.example.com/workspace/demo-trip
         </div>
         <DialogFooter>
           <Button variant="outline">취소</Button>

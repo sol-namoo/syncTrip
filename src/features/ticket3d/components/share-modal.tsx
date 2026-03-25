@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useTripShareSettingsQuery } from "@/features/share/hooks/use-trip-share-settings-query";
 import { useUpsertTripShareSettingsMutation } from "@/features/share/hooks/use-upsert-trip-share-settings-mutation";
 import { TicketViewer } from "@/features/ticket3d/components/ticket-viewer";
+import { buildShareUrl, getPublicAppUrl } from "@/lib/app-url";
 import { cn } from "@/lib/utils";
 import type { TicketRenderData } from "@/types/ticket";
 import type { WorkspaceActor, WorkspaceTrip } from "@/types/workspace";
@@ -32,13 +33,18 @@ export function ShareTicketModal({
   const [localShareCode, setLocalShareCode] = useState<string | undefined>(renderData.shareCode);
   const shareSettingsQuery = useTripShareSettingsQuery(trip.id, open);
   const upsertShareSettingsMutation = useUpsertTripShareSettingsMutation();
+  const isLoadingInitialMessage =
+    open &&
+    shareSettingsQuery.isLoading &&
+    !hasEditedMessage &&
+    !shareSettingsQuery.data;
   const resolvedMessage = hasEditedMessage
     ? message
     : (shareSettingsQuery.data?.message ?? message);
   const resolvedShareCode = localShareCode ?? shareSettingsQuery.data?.share_code ?? renderData.shareCode;
 
   const previewLink = useMemo(() => {
-    return `https://synctrip.app/share/${resolvedShareCode ?? "draft"}`;
+    return `${getPublicAppUrl()}/share/${resolvedShareCode ?? "draft"}`;
   }, [resolvedShareCode]);
 
   const effectiveRenderData = useMemo(
@@ -79,7 +85,7 @@ export function ShareTicketModal({
             </DialogHeader>
             <TicketViewer
               renderData={effectiveRenderData}
-              message={message}
+              message={resolvedMessage}
               isBackVisible={isBackVisible}
               onToggleSide={() => setIsBackVisible((value) => !value)}
             />
@@ -89,7 +95,7 @@ export function ShareTicketModal({
             <div className="border-b border-line-token px-6 py-5">
               <h3 className="text-lg font-semibold text-foreground">Share Ticket</h3>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                티켓은 여행당 하나만 유지됩니다. 메모를 적어 두면 공유받은 사람이 뒷면에서 확인할 수 있습니다.
+                링크를 공유받은 사람은 일정 보기만 가능합니다. 메모를 적어 두면 공유받은 사람이 뒷면에서 확인할 수 있습니다.
               </p>
             </div>
 
@@ -121,10 +127,16 @@ export function ShareTicketModal({
                     setMessage(event.target.value);
                   }}
                   rows={8}
-                  placeholder="티켓 뒷면에 함께 여행할 사람에게 남길 메모를 적어보세요."
+                  disabled={isLoadingInitialMessage}
+                  placeholder={
+                    isLoadingInitialMessage
+                      ? "기존 메모를 불러오는 중..."
+                      : "티켓 뒷면에 함께 여행할 사람에게 남길 메모를 적어보세요."
+                  }
                   className={cn(
                     "w-full resize-none rounded-3xl border border-border-card-token bg-card-surface px-4 py-3 text-sm leading-6 text-foreground outline-none transition-colors",
-                    "placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10"
+                    "placeholder:text-muted-foreground focus:border-primary focus:ring-4 focus:ring-primary/10",
+                    isLoadingInitialMessage ? "cursor-wait opacity-70" : ""
                   )}
                 />
                 <p className="text-xs leading-5 text-muted-foreground">
@@ -152,7 +164,7 @@ export function ShareTicketModal({
                   onClick={async () => {
                     try {
                       const shareCode = await persistShareSettings();
-                      const link = `https://synctrip.app/share/${shareCode}`;
+                      const link = buildShareUrl(shareCode);
                       await navigator.clipboard.writeText(link);
                       toast.success("공유 링크를 복사했습니다.");
                     } catch (error) {
@@ -170,7 +182,7 @@ export function ShareTicketModal({
                   ) : (
                     <Copy className="size-4" />
                   )}
-                  링크 복사
+                  링크 생성
                 </Button>
                 <Button
                   type="button"
@@ -180,7 +192,7 @@ export function ShareTicketModal({
                     try {
                       const shareCode = await persistShareSettings();
                       window.open(
-                        `https://synctrip.app/share/${shareCode}`,
+                        buildShareUrl(shareCode),
                         "_blank",
                         "noopener,noreferrer"
                       );

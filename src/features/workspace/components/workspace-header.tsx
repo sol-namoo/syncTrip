@@ -109,7 +109,7 @@ export function WorkspaceHeader({
             className="hidden rounded-full lg:inline-flex"
             onClick={onOpenShareModal}
           >
-            3D 여권 발급받기
+            티켓 공유하기
           </Button>
           <Button
             type="button"
